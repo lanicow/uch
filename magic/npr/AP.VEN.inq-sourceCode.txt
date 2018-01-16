@@ -1,0 +1,132 @@
+Run on: 12292017 - 0831                                                                       Procedure List                                                                                   Page 1   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                         AP.INV.view.trans.det
+
+URN: AP.INV.view.trans.det                                             Active: Y   Switch Appl: Y   Access: N   Responsible: M   Arguments:                                                             
+     Menu Logic:                                                                   
+
+
+        AP.INV.view.trans.det                                         Active: Y           Min Len, Width:      
+
+
+       Screen: view                                                     Ok Prompt:                                                         Type:  2  Rpt Sched:     Fragment: N
+
+        Title: View Transactions Detail                                Exit Logic:                                                         Data Segment: transactions             
+MultiPage Seq: N Page #?                                              Exit Prompt:                                                         Show Exit Prompt:  
+
+
+       LN +----------1---------2---------3---------4---------5---------6---------7---------8---------9-+    Sections:                       Control Repeat
+        1 |Vendor   @1                                                                                 |    20                                Y       Y
+        2 |                                                                                            |    41,42                             N        
+
+        3 |Invoice  @2                Inv Type  @3                   Inv Date  @4                      |                                               
+        4 |                                                                                            |                                               
+        5 |@4.4       @4.5            Status    @5                   Bank Acc  @6                      |                                               
+
+        6 |                                                                                            |                                               
+        7 |Description  @7                                                                             |                                               
+        8 |                                                                                            |                                               
+
+        9 |Gr @11         Tax @12        Frt @13        Dis  @14        Pay @15         Bal @16        |                                               
+       10 |--------------------------------------------------------------------------------------------|                                               
+       11 |Txn #  @20     Txn Date  @21       Batch #  @22    Batch Txn #  @23    GL Period  @24       |                                               
+
+       12 |           Txn Rcv Date  @21.5     User     @21.7                       Bank Acc @25        |                                               
+       13 |                                                                                            |                                               
+       14 |Comment  @27                                                                                |                                               
+
+       15 |                                                                                            |                                               
+       16 |Check #  @26        Status  @26.5      Status Date  @26.7          Previous Bal  @30        |                                               
+       17 |EDI Session  @30.1                                                                          |                                               
+
+       18 |Gr @31         Tax @32        Frt @33        Dis  @34        Pay @35         Bal @36        |                                               
+       19 |--------------------------------------------------------------------------------------------|                                               
+       20 |                                                                                            |                                               
+
+       21 |             View Txn Input Lines?  @41         View Txn GL Dist?  @42                      |                                               
+          +----------1---------2---------3---------4---------5---------6---------7---------8---------9-+
+
+
+Fields
+
+------
+     1= MIS.VEN.ap.name.and.number[c.vendor]                                                             24= txn.gl.period
+        DIS=C                                                                                                DIS=20
+
+     2= inv.num                                                                                          25= txn.bank.acc
+        DIS=C                                                                                                DIS=20
+     3= type                                                                                                 LEN=11
+
+        DIS=C                                                                                            26= txn.check.num
+     4= inv.date                                                                                             DIS=20
+        DIS=C                                                                                          26.5= c.check.status
+
+   4.4= l.temp.label                                                                                         DIS=20
+        LAB=IF{@p.from.appl "From Appl";""}                                                                  LEN=9
+        LEN=9                                                                                                VAL=IF{@AP.CHECK.check.x[@txn.bank.acc,@txn.check.num]^AP.CHECK.urn
+
+   4.5= from.appl                                                                                            VAL= @AP.CHECK.status}
+        DIS=C                                                                                          26.7= c.check.status.date
+        LABF=@from.appl                                                                                      DIS=20
+
+        LEN=6                                                                                                LEN=10
+     5= status                                                                                               VAL=IF{@AP.CHECK.check.x[@txn.bank.acc,@txn.check.num]^AP.CHECK.urn
+        DIS=C                                                                                                VAL= %Z.date.out(@AP.CHECK.status.date)}
+
+     6= bank.acc                                                                                         27= txn.comment
+        DIS=C                                                                                                DIS=20
+     7= description                                                                                      30= txn.prev.balance
+
+        DIS=C                                                                                                DIS=20
+    11= gross                                                                                          30.1= txn.edi.session
+Run on: 12292017 - 0831                                                                       Procedure List                                                                                   Page 2   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                         AP.INV.view.trans.det
+
+        DIS=C                                                                                                DIS=20
+    12= tax                                                                                              31= txn.gross
+        DIS=C                                                                                                DIS=20
+
+    13= freight                                                                                          32= txn.tax
+        DIS=C                                                                                                DIS=20
+    14= discount                                                                                         33= txn.freight
+
+        DIS=C                                                                                                DIS=20
+    15= payment                                                                                          34= txn.discount
+        DIS=C                                                                                                DIS=20
+
+    16= balance                                                                                          35= txn.payment
+        DIS=C                                                                                                DIS=20
+    20= txn.urn                                                                                          36= txn.balance
+
+        FCL1=""^v.yn.lines^v.yn.dist,@Not(@transactions[urn,@.new])                                          DIS=20
+        FCL1A=@W.err("No such transaction. ")                                                            41= v.yn.lines
+        ID=%AP.INV.id.txn(A)                                                                                 DAT=YN
+
+    21= txn.date                                                                                             FCL1=@.new="Y"
+        DIS=20                                                                                               FCL1A=%AP.INV.view.lines.vr(""),""^A^B^C^D^G^v.yn.lines,
+  21.5= txn.received.date                                                                                    FCL1A=@Display(v.yn.lines)
+
+        DIS=20                                                                                               LEN=1
+  21.7= txn.user                                                                                             REQ=N
+        DIS=20                                                                                           42= v.yn.dist
+
+    22= txn.batch.num                                                                                        DAT=YN
+        DIS=20                                                                                               FCL1=@.new="Y"
+        JFY=L                                                                                                FCL1A=%AP.INV.view.dist.vr(""),""^A^B^C^D^G^v.yn.dist,
+
+    23= txn.batch.txn.urn                                                                                    FCL1A=@Display(v.yn.dist)
+        DIS=20                                                                                               LEN=1
+        JFY=L                                                                                                REQ=N
+
+
+
+
+AP.INV.view.trans.det
+
+
+%AP.INV.view.trans.det.S(""),
+@Z.return^@Z.lastkey;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

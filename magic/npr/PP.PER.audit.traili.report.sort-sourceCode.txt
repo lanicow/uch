@@ -1,0 +1,2022 @@
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 1   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+URN: PP.PER.audit.report.sort                                          Active: Y   Switch Appl: Y   Access: N   Responsible: M   Arguments:                                                             
+     Menu Logic:                                                                   
+
+
+Report: PP.PER.audit.report.sort                                 CPI=12  CPL=92  LPI=6   PGSZ=66  MARG=0   BAN=REG 
+
+
+TYPE    LN +----------1---------2---------3---------4---------5---------6---------7---------8---------9-+
+
+           |RUN DATE: mm/dd/yy                     Hospital Name                              PAGE n    |
+           |RUN TIME: hhmm                      EMPLOYEE AUDIT TRAIL                                    |
+           |RUN USER: user                                                                              |
+
+*HP2     1 |                                                                                            |
+*HP2     2 |                                             @1                                             |
+*HP2     3 |                                            @1.5                                            |
+
+*HP2     4 |                                                                                            |
+*HK4     5 |                                             @2                                             |
+ D       6 |@3                                                                                          |
+
+ TK4     7 |                                                                                            |
+*TK4     8 |                                                                                            |
+           +----------1---------2---------3---------4---------5---------6---------7---------8---------9-+
+
+
+ Line  Attributes
+ ----  -----------
+
+    1  BX   = GRAY
+    2  LC   = c.audit.report.pri.sort
+    3  LC   = c.audit.report.sec.sort
+
+    4  BX   = WHITE
+    5  PG   = 6
+    8  HL   = 2
+
+
+Fields
+------
+
+     1= temp                                                                                                 LEN=79
+        FONT=b                                                                                            2= id
+        JFY=C                                                                                                FONT=b
+        LEN=51                                                                                               JFY=C
+
+   1.5= temp                                                                                                 WITH=HK4
+        FONT=b                                                                                            3= audit.report.line
+        JFY=C                                                                                                VAL=@audit.report.2.sort
+
+
+Detail Segment: PP.PER            audit.report.2.sort                       
+
+
+Footnotes: AL SK1 header1                                                                 
+           AL SK2 header2
+
+
+
+
+PP.PER.audit.report.sort
+
+
+@Translate.as.haltable,
+; PP.PER.audit.report.sort
+;
+
+; This routine creates a /TEMP file with the following subscripts:
+;    subscript 1:  audit.report.sf1
+;    subscript 2:  audit.report.sf2
+
+;    subscript 3:  sort.name
+;    subscript 4:  employee
+;    subscript 5:  audit.report.line.number
+
+; It's value is the audit report line.
+;
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 2   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+; audit.subscript (jyMS): 0 = Personnel fields    1 = Position data     2 = Direct Deposit
+;                         3 = Misc. fields        4 = Skills            5 = Address
+;                         6 = T4 Fields           7 = Payroll fields    8 = Secondary Jobs
+
+;                         9 = Benefits           10 = Withholdings     11 = Att. Template
+;                        12 = Earnings           13 = Eff Rates        14 = Dependents
+;                        CD = Customer Defined   M1 = More1            HS = Health and Safety
+
+;
+; VARIABLES
+;    FF is fast forward
+
+;    LM is the left margin
+;    /OV is the OLD VALUE file
+;
+
+@SETUP,
+@LOOP.ON.SORT.NAMES,
+%PP.PER.audit.report.sort.R("");
+
+
+SETUP
+A^EMPLOYEE,
+
+IF{b.audit.date'=D(127) b.audit.date-1}^B.DATE,
+IF{e.audit.date;D(127)}^E.DATE,
+IF{b.ft.name'=D(127);D(1)}^sort.name,
+
+@Prev(sort.name,name.x)^sort.name,
+IF{e.ft.name=D(127);e.ft.name_D(127)}^E.NAME,
+IF{b.audit.user'=D(127)}^B.USER,
+
+IF{e.audit.user;D(127)}^E.USER,
++c.field[""]_0=0^ALL^/ALL,
+"CANADA"=@MIS.PARAM.country^CAN,
+
+@GET.SORT.FIELD1,
+@GET.SORT.FIELD2,
+"":3L^LM,
+
+@Kill(@Root(audit.report.2.sort))
+
+
+GET.SORT.FIELD1
+IF{c.audit.report.pri.sort="FILING DATE" @Quote(audit.date);
+
+   c.audit.report.pri.sort="AUDIT USER" @Quote(audit.user);
+   c.audit.report.pri.sort="DEPARTMENT" @Quote(/dept);
+   @Quote(D(127))}^SF1^/SF1
+
+
+GET.SORT.FIELD2
+IF{c.audit.report.sec.sort="FILING DATE" @Quote(audit.date);
+
+   c.audit.report.sec.sort="AUDIT USER" @Quote(audit.user);
+   c.audit.report.sec.sort="DEPARTMENT" @Quote(/dept);
+   @Quote(D(127))}^SF2^/SF2
+
+
+LOOP.ON.SORT.NAMES
+DO{IF{EMPLOYEE @sort.name[EMPLOYEE]^sort.name;
+
+      @Next(sort.name,name.x)'>E.NAME} @LOOP.ON.EMPLOYEES}
+
+
+LOOP.ON.EMPLOYEES
+
+DO{IF{EMPLOYEE EMPLOYEE^employee;
+      @Next(employee,name.x)} IF{@PAYROLL.IS.RESTRICTED;
+                                 @STATUS.IS.RESTRICTED;
+
+                                 @CHECK.DEPT,@Not(OK);
+                                 sort.name^/sort.name,
+                                 @W.display("Sorting",@id),
+
+                                 @Kill(@Root(@t.transactions)),
+                                 @Kill(/OV),
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 3   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+                                 @MAYBE.CREATE.AUDIT.TRAIL.MERGE.FILE,
+                                 IF{B.DATE @GET.PREVIOUS.AUDIT.VALUES},
+                                 @GET.CURRENT.AUDIT.VALUES},
+
+                              IF{EMPLOYEE ""^EMPLOYEE,D(127)^sort.name^employee}}
+
+
+PAYROLL.IS.RESTRICTED
+
+; returns TRUE if the employee's payroll is restricted
+IF{+c.payroll[""] @Not(c.payroll[@payroll])}
+
+
+STATUS.IS.RESTRICTED
+; returns TRUE if the employee's status is restricted
+IF{+c.status[""] @Not(c.status[@status])}
+
+
+CHECK.DEPT
+; sets OK to TRUE if the employee's department is within the selected range
+
+@dept^dept^/dept,
+IF{b.dept=D(127);
+   dept'<b.dept;
+
+   0_dept'<(0_b.dept)=0}&IF{dept'>(e.dept_D(127));
+                            0_dept'>(0_e.dept)=0}^OK
+
+
+MAYBE.CREATE.AUDIT.TRAIL.MERGE.FILE
+IF{c.field["9,0"]!ALL_0=0;
+   ""^btxn.earning,9^audit.subscript.1,
+
+   DO{@Next(btxn.earning) btxn.earning^audit.subscript.2,
+                          ""^OLD.PLAN^btxn.date,
+                          DO{@Next(btxn.date) btxn.date^audit.date,
+
+                                              @LOOP.ON.BTXN.TIME}}},
+""^OLD.PLAN
+
+
+LOOP.ON.BTXN.TIME
+""^btxn.time,
+@Def.buf(X,@benefit.transactions),
+DO{@Next.get(btxn.time,X) IF{"M"=@btxn.type;
+
+                             btxn.time^audit.time,
+                             IF{@audit.user @Sub(1,audit.time)},
+                             "**SYSTEM**"^@t.audit.user,
+
+                             @Def.buf(Y,@benefit.balances),
+                             @btxn.plan^@benefit.plan,
+                             @btxn.avail.balance^@benefit.avail.balance,
+
+                             @btxn.accrued.balance^@benefit.accrued.balance,
+                             @btxn.occurance^@benefit.occurance,
+                             @btxn.award^Y|10,
+
+                             IF{IF{@benefit.plan'=OLD.PLAN;
+                                   @benefit.avail.balance;
+                                   @benefit.accrued.balance;
+
+                                   @benefit.occurance;
+                                   Y|10;
+                                   ""} Y^@t.audit.trail.mult.values},
+
+                             @Clr.buf(Y)},
+                          @btxn.plan^OLD.PLAN},
+@Clr.buf(X)
+
+
+GET.PREVIOUS.AUDIT.VALUES
+%PP.PER.audit.get.prev.values(employee,B.DATE,E.DATE,B.USER,E.USER)X
+
+
+GET.CURRENT.AUDIT.VALUES
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 4   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+""^audit.time^audit.report.line.number,B.DATE^audit.date,
+DO{@NEXT.AUDIT.DATE'>E.DATE DO{@NEXT.AUDIT.TIME IF{@USER.OK 1^/HDR,
+                                                            @PRINT.DATA}}}
+
+
+NEXT.AUDIT.DATE
+; get the next date from either the @audit.trail, or the @t.audit.trail
+
++@audit.trail[employee,audit.date]^A,
++@t.audit.trail[employee,audit.date]^B,
+IF{A&B;A;B}^audit.date
+
+
+NEXT.AUDIT.TIME
+; get the next time from either the @audit.trail, or the @t.audit.trail
+
++@audit.trail[employee,audit.date,audit.time]^A,
++@t.audit.trail[employee,audit.date,audit.time]^B,
+IF{A&B;A;B}^audit.time
+
+
+USER.OK
+; Since only one audit.user can exist for a particular audit.date and audit.time,
+
+; we can determine if the audit.value is stored in the permament or temporary file.
+""^USE.SLASH.FILE^/USE.SLASH.FILE,
+IF{@audit.user^audit.user;
+
+   @t.audit.user^audit.user 1^USE.SLASH.FILE^/USE.SLASH.FILE},
+IF{audit.user="**SYSTEM**" IF{"N"=c.include.system.user @STORE.AS.OLD.VAL,"";audit.user};
+   audit.user'<B.USER'>E.USER}^audit.user
+
+
+STORE.AS.OLD.VAL
+; Don't print this SYSTEM edit, but use this value
+
+; as the next entry's old value.
+9^audit.subscript.1,""^audit.subscript.2,
+DO{@Next.get(audit.subscript.2,@t.audit.trail.mult.values,P) P^/OV["9,0",audit.subscript.2]},
+
+10^audit.subscript.1,""^audit.subscript.2,
+DO{@Next.get(audit.subscript.2,@t.audit.trail.mult.values,P) P^/OV["10,0",audit.subscript.2]}
+
+
+NEW.LINE.NUM
+
+@Add(1,audit.report.line.number)
+
+
+LINE
+
+@audit.report.2.sort[V(SF1),V(SF2),sort.name,employee,audit.report.line.number]
+
+
+PRINT.HEADER
+
+@NEW.LINE.NUM," "^@LINE,
+@NEW.LINE.NUM,@Title("DATE: ",audit.date,"   TIME: ",audit.time,"   USER: ",audit.user)^@LINE,
+@NEW.LINE.NUM," "^@LINE,
+
+""^/HDR
+
+
+PRINT.HEADER.1
+
+@NEW.LINE.NUM,I(LM_"                ----------- CURRENT ----------  ---------- PREVIOUS ----------")^@LINE
+
+
+PRINT.HEADER.2
+
+@NEW.LINE.NUM,I(LM_"                -------- CURRENT -------   ------- PREVIOUS -------")^@LINE
+
+
+PRINT.DATA
+
+""^audit.subscript,
+DO{@Next(audit.subscript) IF{audit.subscript'=2'=4'=8'=9'=10'=12'=13'=14'="CD"'="HS" @PRINT.SCALARS}},
+; print multiples: dd, skills, jobs, benefits, wholdings, flex, earnings and dependents.
+
+Q(2,4,8,9,10,12,13,14,"CD","HS")^q,
+DO{U(q)^audit.subscript IF{audit.subscript_",0"^PP.PER.FIELDS.physical,
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 5   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+                           c.field[PP.PER.FIELDS.physical]!ALL_0=0;
+                           @NO.VALUES.EXIST;
+                           IF{audit.subscript=9 @NO.BENEFITS.EXIST};
+
+                           IF{audit.subscript=10 @NO.WHOLDS.EXIST};
+                           IF{/HDR @PRINT.HEADER},
+                           audit.subscript=2 @PRINT.DIRECT.DEPOSIT;
+
+                           audit.subscript=4 @PRINT.SKILLS;
+                           audit.subscript=8 @PRINT.SECONDARY.JOBS;
+                           audit.subscript=9 @PRINT.BENEFITS;
+
+                           audit.subscript=10 @PRINT.WITHHOLDINGS;
+                           audit.subscript=12 @PRINT.EARNINGS;
+                           audit.subscript=13 @PRINT.EFF.RATES;
+
+                           audit.subscript=14 @PRINT.DEPENDENTS;
+                           audit.subscript="CD" @PRINT.CUSTOMER.DEFINED;
+                           audit.subscript="HS" @PRINT.HEALTH.AND.SAFETY}}
+
+
+NO.VALUES.EXIST
+IF{USE.SLASH.FILE!/USE.SLASH.FILE @First(t.audit.subscript.2);
+
+   @First(audit.subscript.2)}_0=0
+
+
+NO.BENEFITS.EXIST
+
+IF{+c.benefit[""] ""^audit.subscript.2^FND,
+                  DO{@NEXT.GET.AUDIT.SUBSCRIPT.2&'FND c.benefit[audit.subscript.2]^FND},
+                  'FND}
+
+
+NO.WHOLDS.EXIST
+IF{+c.whold[""] ""^audit.subscript.2^FND,
+
+                DO{@NEXT.GET.AUDIT.SUBSCRIPT.2&'FND c.whold[audit.subscript.2]^FND},
+                'FND}
+
+
+PRINT.SCALARS
+%PP.PER.audit.report.sort.M.print.scalars(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+PRINT.DIRECT.DEPOSIT
+
+%PP.PER.audit.report.sort.M.print.direct.deposit(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+PRINT.SKILLS
+
+%PP.PER.audit.report.sort.M.print.skills(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+PRINT.SECONDARY.JOBS
+
+%PP.PER.audit.report.sort.M.print.sec.jobs(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+PRINT.BENEFITS
+
+%PP.PER.audit.report.sort.M.print.benefits(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+PRINT.WITHHOLDINGS
+
+%PP.PER.audit.report.sort.M.print.withholdings(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+PRINT.EARNINGS
+
+%PP.PER.audit.report.sort.M.print.earnings(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+PRINT.EFF.RATES
+
+@Macro(print.eff.rates)
+
+
+PRINT.DEPENDENTS
+
+@Macro(print.dependents)
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 6   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+PRINT.CUSTOMER.DEFINED
+%PP.PER.audit.report.sort.M.print.cust.def(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+PRINT.HEALTH.AND.SAFETY
+%PP.PER.audit.report.sort.M.print.health.and.safety(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)^audit.report.line.number
+
+
+NEXT.GET.AUDIT.SUBSCRIPT.2
+IF{USE.SLASH.FILE!/USE.SLASH.FILE @Next.get(t.audit.subscript.2,X);
+   @Next.get(audit.subscript.2,X)}
+
+
+NOTHING.TO.PRINT
+@Not(>@Root(@audit.report.2.sort)[""])
+
+
+PREV.LINE.HAS.INFO
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.header1
+
+
+; PP.PER.audit.report.2.sort.M.header1
+;
+
+IF{c.audit.report.pri.sort="DEPARTMENT" @DEPT;
+   c.audit.report.pri.sort="FILING DATE" @FILING.DATE;
+   c.audit.report.pri.sort="AUDIT USER" @AUDIT.USER}^/V[1]
+
+
+DEPT
+audit.report.sf1_" - "_@MIS.GL.DEPT.name[audit.report.sf1]
+
+
+FILING.DATE
+"FILING DATE: "_%Z.date.out(audit.report.sf1)
+
+
+AUDIT.USER
+"AUDIT USER: "_audit.report.sf1
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.header2
+
+
+; PP.PER.audit.report.2.sort.M.header2
+;
+IF{c.audit.report.sec.sort="DEPARTMENT" @DEPT;
+
+   c.audit.report.sec.sort="FILING DATE" @FILING.DATE;
+   c.audit.report.sec.sort="AUDIT USER" @AUDIT.USER}^/V[1.5]
+
+
+DEPT
+"DEPARTMENT: "_audit.report.sf2_" - "_@MIS.GL.DEPT.name[audit.report.sf2]
+
+
+FILING.DATE
+"FILING DATE: "_%Z.date.out(audit.report.sf2)
+
+
+AUDIT.USER
+"AUDIT USER: "_audit.report.sf2
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.benefits
+
+
+A^employee,
+B^audit.date,
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 7   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+C^audit.time,
+D^audit.subscript,
+E^audit.report.line.number,
+
+"CANADA"=@MIS.PARAM.country^CAN,
+audit.subscript_",0"^PP.PER.FIELDS.physical,
+IF{@audit.user^audit.user;
+
+   @t.audit.user^audit.user}^audit.user,
+@PRINT.BENEFITS,
+audit.report.line.number;
+
+
+PRINT.BENEFITS
+IF{+c.benefit[""] 1^BEN.SEL},
+
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+@NEW.LINE.NUM,IF{@PP.PARAM.ont="Y" I(LM_"BENEFIT   FRZ   PLAN     AVAIL HRS     ACCRU HRS    OCCUR  REASON   ");
+                 I(LM_"BENEFIT   FRZ   PLAN     AVAIL HRS     ACCRU HRS    REASON   ")}^@LINE,
+
+; X is @audit.value.2
+@Def.buf(X,@benefit.balances),""^audit.subscript.2^TEMP.AWARD,
+DO{@NEXT.GET.AUDIT.SUBSCRIPT.2 audit.subscript.2^benefit,
+
+                               IF{BEN.SEL&@Not(c.benefit[benefit]);
+                                  X^SAV,@Kill(V),
+                                  @PP.EARN.mnemonic^V[1],
+
+                                  IF{X="*" "**DELETED**"^V[2];
+                                     @benefit.freeze^V[2],
+                                     @benefit.plan^V[3],
+
+                                     @benefit.avail.balance^V[4],
+                                     @benefit.accrued.balance^V[5],
+                                     @benefit.occurance^V[5.5],
+
+                                     @benefit.edit.reason^V[6],
+                                     ; award
+                                     X|10^TEMP.AWARD},
+
+                                  @PRINT.BENEFIT.LINE.1,
+                                  ; previous values
+                                  IF{/OV[PP.PER.FIELDS.physical,benefit]^X,'X;
+                                     IF{X="*";
+
+                                        @benefit.freeze^V[12],
+                                        @benefit.plan^V[13],
+                                        @benefit.avail.balance^V[14],
+
+                                        @benefit.accrued.balance^V[15],
+                                        @benefit.occurance^V[15.5],
+                                        @benefit.edit.reason^V[16],
+
+                                        TEMP.AWARD^V[17],
+                                        @PRINT.BENEFIT.LINE.2}},
+                                  SAV^/OV[PP.PER.FIELDS.physical,benefit]}},
+
+@Clr.buf(X),
+@NEW.LINE.NUM," "^@LINE
+
+
+PRINT.BENEFIT.LINE.1
+@NEW.LINE.NUM,
+IF{@PP.PARAM.ont="Y" I(LM_(V[1]:8L)_"   "_(V[2]:1L)_"    "_(V[3]:8L)_" "_(V[4]:9R)_"     "_(V[5]:9R)_"    "_(V[5.5]:4R)_"   "_(V[6]:10L));
+
+   I(LM_(V[1]:8L)_"   "_(V[2]:1L)_"    "_(V[3]:8L)_" "_(V[4]:9R)_"     "_(V[5]:9R)_"    "_(V[6]:10L))}^@LINE
+
+
+PRINT.BENEFIT.LINE.2
+
+@NEW.LINE.NUM,
+IF{@PP.PARAM.ont="Y" I(LM_("  (PREV)":8L)_"   "_(V[12]:1L)_"    "_(V[13]:8L)_" "_(V[14]:9R)_"     "_(V[15]:9R)_"    "_(V[15.5]:4R)_"   "_(V[16]:10L)_" "_(V[17]:8R));
+   I(LM_("  (PREV)":8L)_"   "_(V[12]:1L)_"    "_(V[13]:8L)_" "_(V[14]:9R)_"     "_(V[15]:9R)_" "_(V[16]:10L)_" "_(V[17]:8R))}^@LINE
+
+
+NEXT.GET.AUDIT.SUBSCRIPT.2
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 8   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+IF{/USE.SLASH.FILE @Next.get(t.audit.subscript.2,X);
+   @Next.get(audit.subscript.2,X)}
+
+
+NEW.LINE.NUM
+@Add(1,audit.report.line.number)
+
+
+LINE
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+
+
+PREV.LINE.HAS.INFO
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.cust.def
+
+
+A^employee,
+B^audit.date,
+C^audit.time,
+
+D^audit.subscript,
+E^audit.report.line.number,
+"CANADA"=@MIS.PARAM.country^CAN,
+
+audit.subscript_",0"^PP.PER.FIELDS.physical,
+IF{@audit.user^audit.user;
+   @t.audit.user^audit.user},
+
+@PRINT.CUSTOMER.DEFINED,
+audit.report.line.number;
+
+
+PRINT.CUSTOMER.DEFINED
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+@NEW.LINE.NUM,I(LM_"                               --------- CURRENT --------  --------PREVIOUS --------")^@LINE,
+
+@NEW.LINE.NUM,I(LM_"CUSTOMER DEFINED QUERY         RESPONSE                    RESPONSE")^@LINE,
+""^audit.subscript.2^audit.subscript.4,
+DO{@NEXT.GET.AUDIT.SUBSCRIPT.2 X^SAV,audit.subscript.2^cd.query,
+                               @Kill(V),"M"^audit.subscript.3,
+
+                               IF{@First(audit.subscript.4) DO{@Next.get(audit.subscript.4,Y) Y^SAV,
+                                                                                              @Kill(V),""^RSP,
+                                                                                              @MULT.QRY,
+
+                                                                                              @QRY.OUTPUT},
+                                                            @Kill(/OV[PP.PER.FIELDS.physical,cd.query]),
+                                                            M(@audit.trail.mult.values,/OV[PP.PER.FIELDS.physical,cd.query]);
+
+                                  @REG.QRY,
+                                  @QRY.OUTPUT}},
+""^SAV,@NEW.LINE.NUM," "^@LINE
+
+
+REG.QRY
+@FORMAT.QUERY.TEXT,
+
+IF{X="*" "**DELETED**"^V[2.1];
+   X|0^RSP,
+   @CDS.CURRENT.RESPONSE},
+
+IF{/OV[PP.PER.FIELDS.physical,audit.subscript.2,"CD",cd.query];
+   /OV[PP.PER.FIELDS.physical,cd.query]}^X,
+IF{'X;
+
+   X="*";
+   X|0^RSP,
+   @CDS.PREV.RESPONSE}
+
+
+FORMAT.QUERY.TEXT
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 9   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+IF{L(@MIS.QUERY.text^TXT)>30 TXT$30^V[1.1],
+                             TXT'$30^V[1.2];
+   TXT^V[1.1]}
+
+
+CDS.CURRENT.RESPONSE
+IF{L(RSP)>52 RSP$26^V[2.1],
+
+             RSP'$26$26^V[2.2],
+             RSP'$52^V[2.3];
+   L(RSP)>26 RSP$26^V[2.1],
+
+             RSP'$26^V[2.2];
+   IF{@MIS.QUERY.type="D" %Z.date.out(RSP)^RSP;
+      @MIS.QUERY.type="X" %Z.bdate.out(RSP)^RSP},
+
+   RSP^V[2.1]}
+
+
+CDS.PREV.RESPONSE
+
+IF{L(RSP)>52 RSP$26^V[3.1],
+             RSP'$26$26^V[3.2],
+             RSP'$52^V[3.3];
+
+   L(RSP)>26 RSP$26^V[3.1],
+             RSP'$26^V[3.2];
+   IF{@MIS.QUERY.type="D" %Z.date.out(RSP)^RSP;
+
+      @MIS.QUERY.type="X" %Z.bdate.out(RSP)^RSP},
+   RSP^V[3.1]}
+
+
+MULT.QRY
+IF{(audit.subscript.5="M")&(audit.subscript.6>1);
+   (audit.subscript.3="M")&(audit.subscript.4>1);
+
+   @FORMAT.QUERY.TEXT},
+IF{Y="*" "**DELETED**"^V[2.1];
+   Y|0^RSP,
+
+   @CDS.CURRENT.RESPONSE},
+IF{/OV[PP.PER.FIELDS.physical,audit.subscript.2,"CD",has.cd.query,"M",audit.subscript.6];
+   /OV[PP.PER.FIELDS.physical,cd.query,"M",audit.subscript.4]}^Y,
+IF{'Y;
+
+   Y="*";
+   Y|0^RSP,
+   @CDS.PREV.RESPONSE}
+
+
+QRY.OUTPUT
+IF{(audit.subscript.4)!(audit.subscript.6);
+
+   SAV^/OV[PP.PER.FIELDS.physical,cd.query]},
+@NEW.LINE.NUM,
+I(LM_(V[1.1]:30L)_" "_(V[2.1]:26L)_"  "_(V[3.1]:26L))^@LINE,
+
+IF{V[1.2]!V[2.2]!V[3.2] @NEW.LINE.NUM,
+                        I(LM_(V[1.2]:30L)_" "_(V[2.2]:26L)_"  "_(V[3.2]:26L))^@LINE},
+IF{V[1.3]!V[2.3]!V[3.3] @NEW.LINE.NUM,
+
+                        I(LM_(V[1.3]:30L)_" "_(V[2.3]:26L)_"  "_(V[3.3]:26L))^@LINE}
+
+
+NEXT.GET.AUDIT.SUBSCRIPT.2
+
+IF{/USE.SLASH.FILE @Next.get(t.audit.subscript.2,X);
+   @Next.get(audit.subscript.2,X)}
+
+
+NEW.LINE.NUM
+@Add(1,audit.report.line.number)
+
+
+LINE
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 10  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+
+PREV.LINE.HAS.INFO
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.dependents
+
+
+; PP.PER.audit.report.2.sort.M.print.dependents
+;
+
+@PRINT.DEPENDENTS
+
+
+PRINT.DEPENDENTS
+
+@Kill(/T),
+@BUILD.HEADERS,
+@PRINT.CURRENT,
+
+@PRINT.PREVIOUS,
+@Kill(/T),
+@Kill(/OV[PP.PER.FIELDS.physical]),
+
+M(@audit.trail.values,/OV[PP.PER.FIELDS.physical])
+
+
+BUILD.HEADERS
+
+IF{@.country="US" LM_"------------------------------ PREVIOUS DEPENDENTS ------------------------------"^/T[0],
+                  LM_"------------------------------ CURRENT DEPENDENTS -------------------------------"^/T[1],
+                  LM_"   NAME                      ACT BIRTHDATE RELATION   SOC SEC #    STUDENT  COBRA"^/T[2];
+
+   LM_"-------------------------- PREVIOUS DEPENDENTS ---------------------------"^/T[0],
+   LM_"-------------------------- CURRENT DEPENDENTS ----------------------------"^/T[1],
+   LM_"   NAME                      ACT BIRTHDATE RELATION   SOC INS #    STUDENT"^/T[2]}
+
+
+PRINT.CURRENT
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+
+@NEW.LINE.NUM,I(/T[1])^@LINE,
+@NEW.LINE.NUM,I(/T[2])^@LINE,
+^@audit.trail.mult.values[employee,audit.date,audit.time,@audit.subscript.1]^U,
+@PRINT.DETAIL,
+
+@NEW.LINE.NUM," "^@LINE
+
+
+PRINT.DETAIL
+
+@Def.buf(X,@PP.PER.dependents),
+DO{+([U,dp.number],X)^dp.number @Kill(V),
+                                dp.number^V[1],
+
+                                IF{X="**DELETED**";
+                                   @dp.name}^V[2],
+                                @dp.active^V[3],
+
+                                %Z.bdate.out(@dp.birthdate)^V[4],
+                                @dp.relationship^V[5],
+                                @dp.ss.number^V[6],
+
+                                %Z.date.out(@dp.student.thru.date)^V[7],
+                                @dp.cobra.number^V[8],
+                                @NEW.LINE.NUM,I(LM_(V[1]:2R)_" "_(V[2]:26L)_" "_(V[3]:1L)_"  "_(V[4]:8L)_"  "_(V[5]:10L)_" "_(V[6]:12L)_" "_(V[7]:8L)_" "_(V[8]:5R))^@LINE,
+
+                                @PRINT.ADDRESSES}
+
+
+PRINT.ADDRESSES
+
+@Def.buf(X1,@dependent.address.fields),
+[U]0^X1,
+IF{@dp.marital.status @NEW.LINE.NUM,I(LM_"     MARITAL STATUS: "_(@dp.marital.status))^@LINE},
+
+IF{@dp.marital.status.date @NEW.LINE.NUM,I(LM_"       STATUS DATE:  "_(%Z.date.out(@dp.marital.status.date)))^@LINE},
+IF{@dp.medicare.date @NEW.LINE.NUM,I(LM_"     MEDICARE DATE:  "_(%Z.date.out(@dp.medicare.date)))^@LINE},
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 11  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+IF{@dp.address1 @NEW.LINE.NUM,I(LM_"     ADDRESS1:       "_(@dp.address1))^@LINE},
+IF{@dp.address2 @NEW.LINE.NUM,I(LM_"     ADDRESS2:       "_(@dp.address2))^@LINE},
+IF{@dp.city @NEW.LINE.NUM,I(LM_"     CITY:           "_(@dp.city))^@LINE},
+
+IF{@.country="US" IF{@dp.state @NEW.LINE.NUM,I(LM_"     STATE:          "_(@dp.state))^@LINE},
+                  IF{@dp.postal.code @NEW.LINE.NUM,I(LM_"     ZIP CODE:       "_(@dp.postal.code))^@LINE},
+                  IF{@dp.other.country.choice="CANADA";@dp.other.country}^X2,
+
+                  IF{X2 NEW.LINE.NUM,I(LM_"     COUNTRY:        "_(X2))^@LINE};
+   IF{@dp.state @NEW.LINE.NUM,I(LM_"     PROVINCE:       "_(@dp.state))^@LINE},
+   IF{@dp.postal.code @NEW.LINE.NUM,I(LM_"     POSTAL.CODE:    "_(@dp.postal.code))^@LINE},
+
+   IF{@dp.other.country.choice="US";@dp.other.country}^X2,
+   IF{X2 NEW.LINE.NUM,I(LM_"     COUNTRY:        "_(X2))^@LINE}},
+IF{@dp.home.phone @NEW.LINE.NUM,I(LM_"     HOME PHONE:     "_(@dp.home.phone))^@LINE},
+
+IF{@dp.emergency.phone @NEW.LINE.NUM,I(LM_"     EMER PHONE:     "_(@dp.emergency.phone))^@LINE},
+IF{@dp.email.address @NEW.LINE.NUM,I(LM_"     EMAIL:          "_(@dp.email.address))^@LINE},
+IF{X1 @NEW.LINE.NUM," "^@LINE},
+
+@Clr.buf(X1),""^X2
+
+
+PRINT.PREVIOUS
+
+IF{+/OV[PP.PER.FIELDS.physical,""]_0=0;
+   ; previous values
+   @NEW.LINE.NUM,I(/T[0])^@LINE,
+
+   @NEW.LINE.NUM,I(/T[2])^@LINE,
+   ^/OV[PP.PER.FIELDS.physical]^U,
+   @PRINT.DETAIL,
+
+   @NEW.LINE.NUM," "^@LINE}
+
+
+PREV.LINE.HAS.INFO
+
+L(@LINE:"S")>0
+
+
+NEW.LINE.NUM
+
+@Add(1,audit.report.line.number)
+
+
+LINE
+@audit.report.2.sort[V(SF1),V(SF2),sort.name,employee,audit.report.line.number]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.direct.deposit
+
+
+A^employee,
+B^audit.date,
+
+C^audit.time,
+D^audit.subscript,
+E^audit.report.line.number,
+
+"CANADA"=@MIS.PARAM.country^CAN,
+audit.subscript_",0"^PP.PER.FIELDS.physical,
+IF{@audit.user^audit.user;
+
+   @t.audit.user^audit.user},
+@PRINT.DIRECT.DEPOSIT,
+audit.report.line.number;
+
+
+PRINT.DIRECT.DEPOSIT
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+
+; current values
+IF{OLD.DD @NEW.LINE.NUM,I(LM_"--------------- CURRENT DD ---------------")^@LINE,
+          @NEW.LINE.NUM,I(LM_"BANK               ACCOUNT #          TYPE")^@LINE,
+
+          @Kill(V),
+          @audit.dd.bank^V[3],
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 12  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+          @audit.dd.account.number^V[4],
+          @audit.dd.account.type^V[5],
+          @NEW.LINE.NUM,I(LM_(V[3]:17L)_"  "_(V[4]:17L)_"   "_(V[5]:1L))^@LINE;
+
+   @NEW.LINE.NUM,I(LM_"-------------------- CURRENT DD PRORATION ---------------------")^@LINE,
+   @NEW.LINE.NUM,I(LM_"   TYPE     BANK               ACCOUNT #         TYPE     VALUE")^@LINE,
+   @Def.buf(X,@PP.PER.dd.proration),
+
+   ""^audit.subscript.2,
+   DO{@Next.get(audit.subscript.2,X) @Kill(V),
+                                     audit.subscript.2^dd.pro.counter^V[1],
+
+                                     @dd.pro.type^V[2],
+                                     @dd.pro.bank^V[3],
+                                     @dd.pro.account.number^V[4],
+
+                                     @dd.pro.account.type^V[5],
+                                     @dd.pro.value^V[6],
+                                     @NEW.LINE.NUM,I(LM_(V[1]:2R)_" "_(V[2]:7L)_"  "_(V[3]:17L)_"  "_(V[4]:17L)_"  "_(V[5]:1L)_"  "_(V[6]:10R))^@LINE,
+
+                                     @Clr.buf(X)}},
+@NEW.LINE.NUM," "^@LINE,
+; previous values
+
+IF{/OV["7,12"] @NEW.LINE.NUM,I(LM_"-------------- PREVIOUS DD ---------------")^@LINE,
+               @NEW.LINE.NUM,I(LM_"BANK               ACCOUNT #          TYPE")^@LINE,
+               @Kill(V),
+
+               /OV["7,12"]|0^V[3],
+               /OV["7,12"]|1^V[4],
+               /OV["7,12"]|2^V[5],
+
+               @NEW.LINE.NUM,I(LM_(V[3]:17L)_"  "_(V[4]:17L)_"   "_(V[5]:1L))^@LINE,
+               @Kill(/OV["7,12"]);
+   +/OV["2,0",""]_0=0;
+
+   @NEW.LINE.NUM,I(LM_"------------------- PREVIOUS DD PRORATION ---------------------")^@LINE,
+   @NEW.LINE.NUM,I(LM_"   TYPE     BANK               ACCOUNT #         TYPE     VALUE")^@LINE,
+   @Def.buf(X,@PP.PER.dd.proration),
+
+   ""^dd.pro.counter,
+   DO{@NEXT.GET.DD.PRO.COUNTER @Kill(V),
+                               dd.pro.counter^V[1],
+                               @dd.pro.type^V[2],
+
+                               @dd.pro.bank^V[3],
+                               @dd.pro.account.number^V[4],
+                               @dd.pro.account.type^V[5],
+
+                               @dd.pro.value^V[6],
+                               @NEW.LINE.NUM,I(LM_(V[1]:2R)_" "_(V[2]:7L)_"  "_(V[3]:17L)_"  "_(V[4]:17L)_"  "_(V[5]:1L)_"  "_(V[6]:10R))^@LINE},
+   @Kill(/OV["2,0"]),
+
+   @Clr.buf(X)},
+IF{OLD.DD Q(@audit.dd.bank,@audit.dd.account.number,@audit.dd.account.type)^/OV[PP.PER.FIELDS.physical];
+   @Move(@audit.trail.values,/OV[PP.PER.FIELDS.physical])},
+
+""^OLD.DD,@NEW.LINE.NUM," "^@LINE
+
+
+NEXT.GET.DD.PRO.COUNTER
+
++(/OV[PP.PER.FIELDS.physical,dd.pro.counter],X)^dd.pro.counter
+
+
+NEW.LINE.NUM
+
+@Add(1,audit.report.line.number)
+
+
+LINE
+
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+
+
+PREV.LINE.HAS.INFO
+
+L(@LINE:"S")>0
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 13  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.earnings
+
+
+A^employee,
+B^audit.date,
+C^audit.time,
+
+D^audit.subscript,
+E^audit.report.line.number,
+"CANADA"=@MIS.PARAM.country^CAN,
+
+audit.subscript_",0"^PP.PER.FIELDS.physical,
+IF{@audit.user^audit.user;
+   @t.audit.user^audit.user},
+
+@PRINT.EARNINGS,
+audit.report.line.number;
+
+
+PRINT.EARNINGS
+; current values
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+
+@NEW.LINE.NUM,I(LM_"-------------------------- CURRENT -------------------------")^@LINE,
+@NEW.LINE.NUM,I(LM_"   EARNING   ACTIVE  FRZ "_IF{"Y"=@PP.PARAM.flex "FLEX";"    "}_" EXPRESSION")^@LINE,
+@Def.buf(X,@PP.PER.earnings),""^audit.subscript.2,
+
+DO{@Next.get(audit.subscript.2,X)?0N @Kill(V),
+                                     audit.subscript.2^V[1],
+                                     @PP.EARN.mnemonic[@audit.value.2|0]^V[2],
+
+                                     @audit.value.2|1^V[3],
+                                     @audit.value.2|5^V[4],
+                                     @audit.value.2|4^V[5],
+
+                                     @audit.value.2|2^V[6],
+                                     "("_@audit.value.src_")"'="()"^V[7],
+                                     @NEW.LINE.NUM,I(LM_(V[1]:2R)_" "_(V[2]:8L)_"    "_(V[3]:1L)_"      "_(V[4]:1L)_"   "_(V[5]:1L)_"   "_(V[6]:30L)_" "_(V[7]:3L))^@LINE},
+
+@Clr.buf(X),
+@NEW.LINE.NUM," "^@LINE,
+IF{+/OV[PP.PER.FIELDS.physical,""]_0=0;
+   ; previous values
+
+   @NEW.LINE.NUM,I(LM_"------------------------- PREVIOUS -------------------------")^@LINE,
+   @NEW.LINE.NUM,I(LM_"   EARNING   ACTIVE  FRZ "_IF{"Y"=@PP.PARAM.flex "FLEX";"    "}_" EXPRESSION")^@LINE,
+   ""^earning.counter,@Def.buf(X,@PP.PER.earnings),
+
+   DO{@NEXT.GET.EARNING.COUNTER @Kill(V),
+                                earning.counter^V[1],
+                                @PP.EARN.mnemonic[@earning]^V[2],
+
+                                @earning.active^V[3],
+                                @earning.freeze^V[4],
+                                @earning.created.by.flex^V[5],
+
+                                @earning.expression^V[6],
+                                @NEW.LINE.NUM,I(LM_(V[1]:2R)_" "_(V[2]:8L)_"    "_(V[3]:1L)_"      "_(V[4]:1L)_"   "_(V[5]:1L)_"   "_(V[6]:30L))^@LINE},
+   @Clr.buf(X),
+
+   @NEW.LINE.NUM," "^@LINE},
+"D"^audit.subscript.2,
+IF{@Next(audit.subscript.2)_0=0;
+
+   @NEW.LINE.NUM,"A Flex routine caused the deletion of the following Supplemental Earning(s): "_@PP.EARN.mnemonic[audit.subscript.2%0]^@LINE,
+   DO{@Next(audit.subscript.2) @NEW.LINE.NUM," ":77_@PP.EARN.mnemonic[audit.subscript.2%0]^@LINE},
+   @NEW.LINE.NUM," "^@LINE},
+
+@Kill(/OV[PP.PER.FIELDS.physical]),
+M(@audit.trail.values,/OV[PP.PER.FIELDS.physical])
+
+
+NEXT.GET.EARNING.COUNTER
++(/OV[PP.PER.FIELDS.physical,earning.counter],X)^earning.counter?0N
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 14  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+
+NEW.LINE.NUM
+@Add(1,audit.report.line.number)
+
+
+LINE
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+
+
+PREV.LINE.HAS.INFO
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.eff.rates
+
+
+@Def.buf(X,@eff.base.rates),
+""^audit.subscript.2^eff.date^/TITLE^X,@Kill(/X),
+
+DO{@Next.get(audit.subscript.2,X) IF{'/TITLE @NEW.LINE.NUM,I(LM_"--------------------------- CURRENT --------------------------------------  ")^@LINE,
+                                             @NEW.LINE.NUM,I(LM_"EFF DATE   STEP        RATE       REASON")^@LINE,1^/TITLE},
+                                  audit.subscript.2^eff.date^/X[1],
+
+                                  IF{X="**DELETED**";
+                                     @eff.step}^/X[2],
+                                  @eff.rate^/X[3],
+
+                                  @eff.reason^/X[4],
+                                  @NEW.LINE.NUM,
+                                  I(LM_(%Z.date.out(/X[1]):8L)_(" ":4)_(/X[2]:2R)_(" ":9)_(/X[3]:10L)_" "_(/X[4]:10TL))^@LINE},
+
+@Clr.buf(X),
+@NEW.LINE.NUM," "^@LINE,
+; *** previous values ***
+
+""^SUB^CNT^eff.date^audit.subscript.2^/TITLE,@Kill(/X),
+DO{+/OV[PP.PER.FIELDS.physical,SUB]^SUB IF{'/TITLE @NEW.LINE.NUM,I(LM_"-------------------------- PREVIOUS --------------------------------------  ")^@LINE,
+                                                   @NEW.LINE.NUM,I(LM_"EFF DATE   STEP        RATE       REASON")^@LINE,1^/TITLE},
+
+                                        IF{/OV[PP.PER.FIELDS.physical,SUB]="*";
+                                           SUB^/X[1],
+                                           /OV[PP.PER.FIELDS.physical,SUB]|0^/X[2],
+                                           /OV[PP.PER.FIELDS.physical,SUB]|1^/X[3],
+
+                                           /OV[PP.PER.FIELDS.physical,SUB]|2^/X[4],
+                                           @NEW.LINE.NUM,
+                                           I(LM_(%Z.date.out(/X[1]):8L)_(" ":4)_(/X[2]:2R)_(" ":9)_(/X[3]:10L)_" "_(/X[4]:10TL))^@LINE}},
+
+@Kill(/OV[PP.PER.FIELDS.physical]),@Kill(/X),
+M(@audit.trail.values,/OV[PP.PER.FIELDS.physical])
+
+
+NEW.LINE.NUM
+@Add(1,audit.report.line.number)
+
+
+LINE
+@audit.report.2.sort[V(SF1),V(SF2),sort.name,employee,audit.report.line.number]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.health.and.safety
+
+
+A^employee,
+B^audit.date,
+C^audit.time,
+
+D^audit.subscript,
+E^audit.report.line.number,
+"CANADA"=@MIS.PARAM.country^CAN,
+
+audit.subscript_",0"^PP.PER.FIELDS.physical,
+IF{@audit.user^audit.user;
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 15  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+   @t.audit.user^audit.user},
+@PRINT.HEALTH.AND.SAFETY,
+audit.report.line.number;
+
+
+PRINT.HEALTH.AND.SAFETY
+; current values
+
+""^HS^QRY,
+DO{@Next(audit.subscript.2) IF{@audit.value.2 1^HS},
+                            IF{@First(audit.subscript.3)="CD" 1^QRY}},
+
+IF{HS @PRINT.HAS.RECORD},
+IF{QRY @PRINT.HAS.QUERIES}
+
+
+PRINT.HAS.RECORD
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+@NEW.LINE.NUM,I(LM_"   --------------------- CURRENT --------------------")^@LINE,
+
+@NEW.LINE.NUM,I(LM_"   H&S CODE  LAST INSTR   NEXT INSTR    # CEU   # CMU")^@LINE,
+@Def.buf(X,@PP.PER.health.and.safety),""^audit.subscript.2,
+DO{@Next.get(audit.subscript.2,X) IF{'X;
+
+                                     @Kill(V),
+                                     audit.subscript.2^V[1],
+                                     IF{@audit.value.2="**DELETED**"^V[3];
+
+                                        %Z.date.out(@audit.value.2|1)^V[3],
+                                        %Z.date.out(@audit.value.2|2)^V[4],
+                                        @audit.value.2|3^V[5],
+
+                                        @audit.value.2|4^V[6]},
+                                     @NEW.LINE.NUM,I(LM_"   "_(V[1]:8L)_"  "_(V[3]:11L)_"  "_(V[4]:11L)_"  "_(V[5]:6R)_"  "_(V[6]:6R))^@LINE}},
+@Clr.buf(X),
+
+@NEW.LINE.NUM," "^@LINE,
+IF{+/OV[PP.PER.FIELDS.physical,""]_0=0;
+   ; previous values
+
+   @NEW.LINE.NUM,I(LM_"   -------------------- PREVIOUS --------------------")^@LINE,
+   @NEW.LINE.NUM,I(LM_"   H&S CODE  LAST INSTR   NEXT INSTR    # CEU   # CMU")^@LINE,
+   ""^has.mnemonic,@Def.buf(X,@PP.PER.health.and.safety),
+   DO{@NEXT.GET.HAS.MNEMONIC @Kill(V),
+
+                             has.mnemonic^V[1],
+                             IF{X="**DELETED**"^V[3];
+                                %Z.date.out(@has.last.instr.date)^V[3],
+
+                                %Z.date.out(@has.next.instr.date)^V[4],
+                                @has.num.ceu^V[5],
+                                @has.num.cmu^V[6]},
+
+                             @NEW.LINE.NUM,I(LM_"   "_(V[1]:8L)_"  "_(V[3]:11L)_("  ")_(V[4]:11L)_"  "_(V[5]:6R)_"  "_(V[6]:6R))^@LINE},
+   @Clr.buf(X),
+   @NEW.LINE.NUM," "^@LINE},
+
+;@Kill(/OV[PP.PER.FIELDS.physical]),
+;M(@audit.trail.values,/OV[PP.PER.FIELDS.physical])
+""^XX,
+
+DO{+/OV[PP.PER.FIELDS.physical,XX]^XX ""^/OV[PP.PER.FIELDS.physical,XX]},
+DO{@Next.get(audit.subscript.2,XX) XX^/OV[PP.PER.FIELDS.physical,audit.subscript.2]}
+
+
+NEXT.GET.HAS.MNEMONIC
++(/OV[PP.PER.FIELDS.physical,has.mnemonic],X)^has.mnemonic
+
+
+PRINT.HAS.QUERIES
+""^audit.subscript.2,
+DO{@Next(audit.subscript.2) "CD"^audit.subscript.3,""^audit.subscript.4,
+
+                            IF{@First(audit.subscript.4) @PRINT.HAS.QUERY.HEADER},
+                            DO{@Next.get(audit.subscript.4,X) X^SAV,audit.subscript.4^has.cd.query,
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 16  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+                                                              @Kill(V),"M"^audit.subscript.5,
+                                                              IF{@First(audit.subscript.6) DO{@Next.get(audit.subscript.6,Y) Y^SAV,
+                                                                                                                             @Kill(V),""^RSP,
+
+                                                                                                                             @MULT.QRY,
+                                                                                                                             @QRY.OUTPUT},
+                                                                                           @Kill(/OV[PP.PER.FIELDS.physical,audit.subscript.2,"CD",has.cd.query]),
+
+                                                                                           @Move(@audit.trail.mult.values.4,/OV[PP.PER.FIELDS.physical,audit.subscript.2,"CD",has.cd.query]);
+                                                                 @REG.QRY,
+                                                                 @QRY.OUTPUT}}},
+
+""^SAV,@NEW.LINE.NUM," "^@LINE
+
+
+PRINT.HAS.QUERY.HEADER
+
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+@NEW.LINE.NUM,I(LM_"H & S CODE: "_(audit.subscript.2:8L)_"           --------- CURRENT --------  -------- PREVIOUS --------")^@LINE,
+@NEW.LINE.NUM,I(LM_"CUSTOMER DEFINED QUERY         RESPONSE                    RESPONSE")^@LINE,
+
+@NEW.LINE.NUM," "^@LINE
+
+
+REG.QRY
+
+@FORMAT.QUERY.TEXT,
+IF{X="*" "**DELETED**"^V[2.1];
+   X|0^RSP,
+
+   @CDS.CURRENT.RESPONSE},
+IF{/OV[PP.PER.FIELDS.physical,audit.subscript.2,"CD",cd.query];
+   /OV[PP.PER.FIELDS.physical,cd.query]}^X,
+
+IF{'X;
+   X="*";
+   X|0^RSP,
+
+   @CDS.PREV.RESPONSE}
+
+
+FORMAT.QUERY.TEXT
+
+IF{L(@MIS.QUERY.text^TXT)>30 TXT$30^V[1.1],
+                             TXT'$30^V[1.2];
+   TXT^V[1.1]}
+
+
+CDS.CURRENT.RESPONSE
+IF{L(RSP)>52 RSP$26^V[2.1],
+             RSP'$26$26^V[2.2],
+
+             RSP'$52^V[2.3];
+   L(RSP)>26 RSP$26^V[2.1],
+             RSP'$26^V[2.2];
+
+   IF{@MIS.QUERY.type="D" %Z.date.out(RSP)^RSP;
+      @MIS.QUERY.type="X" %Z.bdate.out(RSP)^RSP},
+   RSP^V[2.1]}
+
+
+CDS.PREV.RESPONSE
+IF{L(RSP)>52 RSP$26^V[3.1],
+
+             RSP'$26$26^V[3.2],
+             RSP'$52^V[3.3];
+   L(RSP)>26 RSP$26^V[3.1],
+
+             RSP'$26^V[3.2];
+   IF{@MIS.QUERY.type="D" %Z.date.out(RSP)^RSP;
+      @MIS.QUERY.type="X" %Z.bdate.out(RSP)^RSP},
+
+   RSP^V[3.1]}
+
+
+MULT.QRY
+
+IF{(audit.subscript.5="M")&(audit.subscript.6>1);
+   (audit.subscript.3="M")&(audit.subscript.4>1);
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 17  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+   @FORMAT.QUERY.TEXT},
+IF{Y="*" "**DELETED**"^V[2.1];
+   Y|0^RSP,
+
+   @CDS.CURRENT.RESPONSE},
+IF{/OV[PP.PER.FIELDS.physical,audit.subscript.2,"CD",has.cd.query,"M",audit.subscript.6];
+   /OV[PP.PER.FIELDS.physical,cd.query,"M",audit.subscript.4]}^Y,
+
+IF{'Y;
+   Y="*";
+   Y|0^RSP,
+
+   @CDS.PREV.RESPONSE}
+
+
+QRY.OUTPUT
+
+IF{(audit.subscript.4)!(audit.subscript.6);
+   SAV^/OV[PP.PER.FIELDS.physical,cd.query]},
+@NEW.LINE.NUM,
+
+I(LM_(V[1.1]:30L)_" "_(V[2.1]:26L)_"  "_(V[3.1]:26L))^@LINE,
+IF{V[1.2]!V[2.2]!V[3.2] @NEW.LINE.NUM,
+                        I(LM_(V[1.2]:30L)_" "_(V[2.2]:26L)_"  "_(V[3.2]:26L))^@LINE},
+
+IF{V[1.3]!V[2.3]!V[3.3] @NEW.LINE.NUM,
+                        I(LM_(V[1.3]:30L)_" "_(V[2.3]:26L)_"  "_(V[3.3]:26L))^@LINE}
+
+
+NEW.LINE.NUM
+@Add(1,audit.report.line.number)
+
+
+LINE
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+
+
+PREV.LINE.HAS.INFO
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.scalars
+
+
+A^employee,
+
+B^audit.date,
+C^audit.time,
+D^audit.subscript,
+
+E^audit.report.line.number,
+"CANADA"=@MIS.PARAM.country^CAN,
+IF{@audit.user^audit.user;
+
+   @t.audit.user^audit.user},
+@PRINT.SCALARS,
+audit.report.line.number;
+
+
+PRINT.SCALARS
+audit.subscript^S,
+
+0^F,IF{S=0 19;S=1 25;S=3 13;S=5 6;S=6 7;S=7 29;S=11 1;S="M1" 9;S="EM" 0}^MAX,
+@Est.buf(A,audit.trail.values),
+DO{F'>MAX IF{A|F^V^VX,'V;
+
+             @CHECK.SPECIAL,
+             S_","_F^PP.PER.FIELDS.physical,
+             PP.PER.FIELDS.physical="0,5" @CHECK.FOR.ADDR.OLD.FORMAT;
+
+             PP.PER.FIELDS.physical="7,12" @CHECK.FOR.DD.OLD.FORMAT;
+             c.field[PP.PER.FIELDS.physical]!/ALL_0=0;
+             @Est.buf(B,PP.PER.FIELDS.main),'B;
+
+             IF{/HDR @PRINT.HEADER,
+                     @PRINT.HEADER.1},
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 18  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+             IF{@PP.PER.FIELDS.special @SPECIAL;
+                @REGULAR}},
+          IF{FF 1+FF^F,""^FF;@Add(1,F)}},
+
+@Clr.buf(A)
+
+
+CHECK.FOR.ADDR.OLD.FORMAT
+
+IF{c.field["5,0"]!/ALL 1^OLD.ADDR,
+                       IF{/HDR @PRINT.HEADER,
+                               @PRINT.HEADER.2},
+
+                       @ADDRESS}
+
+
+CHECK.FOR.DD.OLD.FORMAT
+
+IF{c.field["2,0"]!/ALL 1^OLD.DD,
+                       IF{/HDR @PRINT.HEADER},
+                       @PRINT.DIRECT.DEPOSIT}
+
+
+CHECK.SPECIAL
+; FF is fast forward.  It's used to advance the F value.
+
+;  OLD ADDR: 0|5, 0|6, 0|7, 0|8
+; EMPL TYPE: 1|0, 1|22
+;  POSITION: 1|1, 1|24
+
+;   RES POS: 1|25
+;     SHIFT: 1|4, 1|5
+;   HRS/PER: 1|6, 1|23
+
+;    STATUS: 1|7, 1|8, 1|9
+;  NEXT RVW: 1|13, 1|14
+;   ADDRESS: 5|0, 5|1, 5|2, 5|3, 5|4, 5|5, 5|6
+
+;  T4 BOXES: 6|0, 6|1, 6|4, 6|5, 6|6, 6|7
+; BASE RATE: 7|7, 7|8, 7|9
+;    OLD DD: 7|12, 7|13, 7|14
+
+; W-2 BOXES: 7|24, 7|26, 7|29
+;
+IF{S=0 IF{F'<5'>8 5^F,8^FF};
+   S=1 IF{F=0 0^FF;
+
+          F=1 1^FF;
+          F'<4'>5 4^F,5^FF;
+          F=6 6^FF;
+
+          F'<7'>9 7^F,9^FF;
+          F'<13'>14 13^F,14^FF;
+          F=25 25^FF};
+
+   S=5 IF{F'<0'>6 0^F,6^FF};
+   S=6 IF{F'=2'=3 0^F,7^FF};
+   S=7 IF{F'<7'>9 7^F,9^FF;
+
+          F'<12'>14 12^F,14^FF;
+          F=24!(F=26)!(F=29) 24^F,29^FF}}
+
+
+SPECIAL
+IF{@PP.PER.FIELDS.name="ADDRESS" @ADDRESS;
+   @PP.PER.FIELDS.name="BASE RATE" @BASE.RATE;
+
+   @PP.PER.FIELDS.name="HRS/PER" @HRS.PER;
+   @PP.PER.FIELDS.name="NEXT RVW" @NEXT.RVW;
+   @PP.PER.FIELDS.name="POSITION" @POSITION;
+
+   @PP.PER.FIELDS.name="SHIFT" @SHIFT;
+   @PP.PER.FIELDS.name="STATUS" @STATUS;
+   @PP.PER.FIELDS.name="T4 BOXES" @T4.BOXES;
+
+   @PP.PER.FIELDS.name="TYPE" @TYPE;
+   @PP.PER.FIELDS.name="RESERVED POSITION" @RES.POS;
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 19  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+   @PP.PER.FIELDS.name="W-2 BOXES" @W2.BOXES}
+
+
+ADDRESS
+
+; current values
+@Kill(c.address),
+IF{OLD.ADDR ""^V^i,
+
+            IF{@audit.addr1^V V^c.address[@Add(1,i)]|0},
+            IF{@audit.addr2^V V^c.address[@Add(1,i)]|0},
+            IF{@audit.addr3^V V^c.address[@Add(1,i)]|0},
+
+            IF{@audit.zip.code^V V^c.address[@Add(1,i)]|0};
+   ""^i,
+   @audit.value|0^c.address[@Add(1,i)]|0,
+
+   @audit.value|1^c.address[@Add(1,i)]|0,
+   "City: "_@audit.value|2^c.address[@Add(1,i)]|0,
+   IF{CAN "Province: ";"State: "}_@audit.value|3^c.address[@Add(1,i)]|0,
+
+   IF{CAN "Postal Code: ";"Zip Code: "}_@audit.value|4^c.address[@Add(1,i)]|0,
+   "Country: "_IF{"OTHER"=@audit.value|5 @audit.value|6;
+                  @audit.value|5}^c.address[@Add(1,i)]|0},
+
+; previous values
+IF{/OV["0,5"] ""^i^V,
+              IF{/OV["0,5"]|0^V V^c.address[@Add(1,i)]|1},
+
+              IF{/OV["0,5"]|1^V V^c.address[@Add(1,i)]|1},
+              IF{/OV["0,5"]|2^V V^c.address[@Add(1,i)]|1},
+              IF{/OV["0,5"]|3^V V^c.address[@Add(1,i)]|1},
+
+              @Kill(/OV["0,5"]);
+   /OV[PP.PER.FIELDS.physical] ""^i,
+                               /OV[PP.PER.FIELDS.physical]|0^c.address[@Add(1,i)]|1,
+
+                               /OV[PP.PER.FIELDS.physical]|1^c.address[@Add(1,i)]|1,
+                               "City: "_/OV[PP.PER.FIELDS.physical]|2^c.address[@Add(1,i)]|1,
+                               IF{CAN "Province: ";"State: "}_/OV[PP.PER.FIELDS.physical]|3^c.address[@Add(1,i)]|1,
+
+                               IF{CAN "Postal Code: ";"Zip Code: "}_/OV[PP.PER.FIELDS.physical]|4^c.address[@Add(1,i)]|1,
+                               "Country: "_IF{"OTHER"=/OV[PP.PER.FIELDS.physical]|5 /OV[PP.PER.FIELDS.physical]|6;
+                                              /OV[PP.PER.FIELDS.physical]|5}^c.address[@Add(1,i)]|1,
+                               @Kill(/OV[PP.PER.FIELDS.physical])},
+
+""^i,"ADDRESS:"^L0,
+DO{+(c.address[i],X)^i L0:16L_X|0^V,
+                       IF{X|1 V:48L_X|1^V},
+
+                       ""^L0,@NEW.LINE.NUM,LM_V^@LINE},
+IF{OLD.ADDR Q(@audit.addr1,@audit.addr2,@audit.addr3,@audit.zip.code);
+   @audit.value}^/OV[PP.PER.FIELDS.physical],
+
+""^OLD.ADDR
+
+
+BASE.RATE
+
+@Title("BASE RATE: ":16L,@audit.base.rate,"  ",@audit.base.rate.date,"  ",@audit.base.rate.reason)^V,
+IF{/OV[PP.PER.FIELDS.physical]^X,'X;
+   V:48L_X|0_"  "_%Z.date.out(X|1)_"  "_X|2^V},
+
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(@audit.base.rate,@audit.base.rate.date,@audit.base.rate.reason)^/OV[PP.PER.FIELDS.physical]
+
+
+HRS.PER
+@Title("HRS/PER: ":16L,@audit.hours.per.period,"  ",@audit.hrs.per.period.date)^V,
+IF{/OV[PP.PER.FIELDS.physical]^X,'X;
+
+   V:48L_X|0_"  "_%Z.date.out(X|1)^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(@audit.hours.per.period,@audit.hrs.per.period.date)^/OV[PP.PER.FIELDS.physical]
+
+
+NEXT.RVW
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 20  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+@Title("NEXT RVW DATE: ":16L,@audit.next.review.date,"  ",@audit.next.review.reason)^V,
+IF{/OV[PP.PER.FIELDS.physical]^X,'X;
+   V:48L_%Z.date.out(X|0)_"  "_X|1^V},
+
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(@audit.next.review.date,@audit.next.review.reason)^/OV[PP.PER.FIELDS.physical]
+
+
+POSITION
+@Title("POSITION: ":16L,@audit.position.number,"  ",@audit.position.date)^V,
+IF{/OV[PP.PER.FIELDS.physical]^X,'X;
+
+   V:48L_X|0_"  "_%Z.date.out(X|1)^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(@audit.position.number,@audit.position.date)^/OV[PP.PER.FIELDS.physical]
+
+
+RES.POS
+@Title("RESERVED POSITION"$14_" :":16L,@audit.reserved.position)^V,
+
+IF{/OV[PP.PER.FIELDS.physical]^X,'X;
+   V:48L_X|0_"  "_%Z.date.out(X|1)^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+
+Q(@audit.reserved.position)^/OV[PP.PER.FIELDS.physical]
+
+
+SHIFT
+
+@Title("SHIFT: ":16L,@audit.shift,"  ",@audit.shift.date)^V,
+IF{/OV[PP.PER.FIELDS.physical]^X,'X;
+   V:48L_X|0_"  "_%Z.date.out(X|1)^V},
+
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(@audit.shift,@audit.shift.date)^/OV[PP.PER.FIELDS.physical]
+
+
+STATUS
+@Title("STATUS: ":16L,@audit.status,"  ",@audit.status.date,"  ",@audit.status.reason)^V,
+IF{/OV[PP.PER.FIELDS.physical]^X,'X;
+
+   V:48L_X|0_"  "_%Z.date.out(X|1)_"  "_X|2^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(@audit.status,@audit.status.date,@audit.status.reason)^/OV[PP.PER.FIELDS.physical]
+
+
+T4.BOXES
+/OV[PP.PER.FIELDS.physical]^X,
+@Title("T4 CPP/QPP: ":16L,(IF{@audit.t4.cpp.qpp.exempt^CPP IF{CPP'="*";"**DELETED**"};(X|0^CPP'="*")}))^V,
+
+IF{X V:48L_(X|0'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+@Title("T4 EI EXEMPT: ":16L,(IF{@audit.t4.ei.exempt^EI IF{EI'="*";"**DELETED**"};(X|1^EI'="*")}))^V,
+
+IF{X V:48L_(X|1'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+@Title("T4 PPIP EXEMPT: ":16L,(IF{@audit.t4.ppip.exempt^PPIP IF{PPIP'="*";"**DELETED**"};(X|5^PPIP'="*")}))^V,
+
+IF{X V:48L_(X|5'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+@Title("T4 EMPL CODE: ":16L,(IF{@audit.t4.employment.code^ECODE IF{ECODE'="*";"**DELETED**"};(X|2^ECODE'="*")}))^V,
+
+IF{X V:48L_(X|2'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+@Title("T4 STOCK CODE: ":16L,(IF{@audit.t4.stock.code^SCODE IF{SCODE'="*";"**DELETED**"};(X|3^SCODE'="*")}))^V,
+
+IF{X V:48L_(X|3'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+@Title("T4A BUSINESS #: ":16L,(IF{@audit.t4a.business.no^BUSNO IF{BUSNO'="*";"**DELETED**"};(X|4^BUSNO'="*")}))^V,
+
+IF{X V:48L_(X|4'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(CPP,EI,ECODE,SCODE,BUSNO,PPIP)^/OV[PP.PER.FIELDS.physical]
+
+
+TYPE
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 21  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+@Title("TYPE: ":16L,@audit.empl.type,"  ",@audit.empl.type.date)^V,
+IF{/OV[PP.PER.FIELDS.physical]^X,'X;
+   V:48L_X|0_"  "_%Z.date.out(X|1)^V},
+
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(@audit.empl.type,@audit.empl.type.date)^/OV[PP.PER.FIELDS.physical]
+
+
+W2.BOXES
+/OV[PP.PER.FIELDS.physical]^X,
+@Title(" W-2 PENSION: ":16L,(IF{@audit.pension^PEN IF{PEN'="*";"**DELETED**"};(X|0^PEN'="*")}))^V,
+
+IF{X V:48L_(X|0'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+@Title(" W-2 STATUTORY: ":16L,(IF{@audit.statutory^STAT IF{STAT'="*";"**DELETED**"};(X|1^STAT'="*")}))^V,
+
+IF{X V:48L_(X|1'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+@Title(" W-2 THIRD PTY: ":16L,(IF{@audit.third.party.sick^THIRD_PTY IF{THIRD_PTY'="*";"**DELETED**"};(X|2^THIRD_PTY'="*")}))^V,
+
+IF{X V:48L_(X|2'="*")^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+Q(PEN,STAT,THIRD_PTY)^/OV[PP.PER.FIELDS.physical]
+
+
+REGULAR
+IF{V="*" "**DELETED**"^V;
+
+   @PP.PER.FIELDS.output V(@PP.PER.FIELDS.output)^V},
+@PP.PER.FIELDS.name$14_": ":16L_V^V,
+IF{/OV[PP.PER.FIELDS.physical] V^SAV,
+
+                               /OV[PP.PER.FIELDS.physical]^V,
+                               IF{V="*" ""^V;
+                                  @PP.PER.FIELDS.output V(@PP.PER.FIELDS.output)^V},
+
+                               SAV:48L_V^V},
+@NEW.LINE.NUM,LM_V^@LINE,
+VX^/OV[PP.PER.FIELDS.physical]
+
+
+PRINT.DIRECT.DEPOSIT
+%PP.PER.audit.report.sort.M.print.direct.deposit(employee,audit.date,audit.time,audit.subscript,audit.report.line.number)
+
+
+NEW.LINE.NUM
+@Add(1,audit.report.line.number)
+
+
+LINE
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+
+
+PRINT.HEADER
+@NEW.LINE.NUM," "^@LINE,
+@NEW.LINE.NUM,@Title("DATE: ",audit.date,"   TIME: ",audit.time,"   USER: ",audit.user)^@LINE,
+
+@NEW.LINE.NUM," "^@LINE,
+""^/HDR
+
+
+PRINT.HEADER.1
+@NEW.LINE.NUM,I(LM_"                ----------- CURRENT ----------  ---------- PREVIOUS ----------")^@LINE
+
+
+PRINT.HEADER.2
+@NEW.LINE.NUM,I(LM_"                -------- CURRENT -------   ------- PREVIOUS -------")^@LINE
+
+
+PREV.LINE.HAS.INFO
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.report.sort.M.print.sec.jobs
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 22  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+
+A^employee,
+B^audit.date,
+
+C^audit.time,
+D^audit.subscript,
+E^audit.report.line.number,
+
+"CANADA"=@MIS.PARAM.country^CAN,
+audit.subscript_",0"^PP.PER.FIELDS.physical,
+IF{@audit.user^audit.user;
+
+   @t.audit.user^audit.user},
+@PRINT.SECONDARY.JOBS,
+audit.report.line.number;
+
+
+PRINT.SECONDARY.JOBS
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+
+IF{@First(audit.subscript.2)^X,@audit.value.2[X]|0 "";1}^/OLD.SJ,
+; *** Multiple by Value ***
+IF{/OLD.SJ @Def.buf(X,@secondary.jobs),
+
+           ""^audit.subscript.2^/TITLE,@Kill(V),
+           DO{@Next.get(audit.subscript.2,X) IF{'/TITLE @PRINT.HEADER.2,
+                                                        @NEW.LINE.NUM,I(LM_"SEC JOB CODE        RATE  DEPARTMENT           RATE  DEPARTMENT    ")^@LINE,1^/TITLE},
+
+                                             audit.subscript.2^secondary.job^V[1],
+                                             IF{X="**DELETED**";
+                                                @secondary.rate}^V[2],
+
+                                             @secondary.dept^V[3],
+                                             ; *** previous values ***
+                                             IF{/OV[PP.PER.FIELDS.physical,audit.subscript.2]_0=0;
+
+                                                /OV[PP.PER.FIELDS.physical,audit.subscript.2]="*";
+                                                /OV[PP.PER.FIELDS.physical,audit.subscript.2]|1^V[4],
+                                                /OV[PP.PER.FIELDS.physical,audit.subscript.2]|2^V[5]},
+
+                                             @Kill(/OV[PP.PER.FIELDS.physical]),
+                                             X^/OV[PP.PER.FIELDS.physical,audit.subscript.2],
+                                             @NEW.LINE.NUM,I(LM_"   "_(V[1]:10L)_"   "_((V[2]:8R)_"  "_(V[3]:15L):25TL)_"  "_(V[4]:8R)_"  "_(V[5]:15L))^@LINE},
+           @Clr.buf(X);
+
+   ; *** Multiple by Que ***
+   @Def.buf(X,@sec.jobs),
+   ""^audit.subscript.2^sec.job.counter^/TITLE^X,@Kill(/X),
+
+   DO{@Next.get(audit.subscript.2,X) IF{'/TITLE @NEW.LINE.NUM,I(LM_"--------------------------- CURRENT SECONDARY JOBS -------------------------  ")^@LINE,
+                                                @NEW.LINE.NUM,I(LM_"  #  JOB CODE    DEPARTMENT       STEP   RATE       CONTRACT   POSITION NUMBER     % HRS")^@LINE,1^/TITLE},
+                                     audit.subscript.2^sec.job.counter^/X[1],
+
+                                     IF{X="**DELETED**";
+                                        @sec.job}^/X[2],
+                                     @sec.job.dept^/X[3],
+
+                                     @sec.job.step^/X[5],
+                                     @sec.job.rate^/X[6],
+                                     @sec.job.contract^/X[7],
+
+                                     @sec.job.pos.number^/X[7.5],
+                                     @sec.job.hrs.percent^/X[8],
+                                     @NEW.LINE.NUM,
+
+                                     I(LM_(/X[1]:3R)_"  "_(/X[2]:11L)_" "_(/X[3]:16L)_" "_(/X[5]:4R)_"    "_(/X[6]:10L)_" "_(/X[7]:10L)_" "_(/X[7.5]:18LT)_" "_(/X[8]:5R))^@LINE,
+                                     IF{"SR"^audit.subscript.3,
+                                        L(@First(audit.subscript.4))=0;
+
+                                        @NEW.LINE.NUM," "^@LINE,
+                                        @NEW.LINE.NUM,I(LM_(" ":24)_("----- EFFECTIVE RATES -----"))^@LINE,
+                                        @NEW.LINE.NUM,I(LM_(" ":25)_("EFF DATE STEP   RATE"))^@LINE,
+
+                                        @Def.buf(Y,@sec.eff.rates),
+                                        ""^audit.subscript.4,
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 23  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+                                        DO{@Next.get(audit.subscript.4,Y) audit.subscript.4^sec.eff.date,
+                                                                          %Z.date.out(sec.eff.date)^/X[10],
+                                                                          @sec.eff.step^/X[11],
+
+                                                                          @sec.eff.rate^/X[12],
+                                                                          @NEW.LINE.NUM,I(LM_(" ":25)_(/X[10]:10L)_" "_(/X[11]:2L)_(" ":3)_(/X[12]:8L))^@LINE},
+                                        @NEW.LINE.NUM," "^@LINE}},
+
+   @Clr.buf(X),
+   @NEW.LINE.NUM," "^@LINE,
+   ; *** previous values ***
+
+   ""^SUB^CNT^sec.job.counter^audit.subscript.2^/TITLE,@Kill(/X),
+   DO{+/OV[PP.PER.FIELDS.physical,SUB]^SUB IF{'/TITLE @NEW.LINE.NUM,I(LM_"-------------------------- PREVIOUS SECONDARY JOBS -------------------------  ")^@LINE,
+                                                      @NEW.LINE.NUM,I(LM_"  #  JOB CODE    DEPARTMENT       STEP   RATE       CONTRACT   POSITION NUMBER     % HRS")^@LINE,1^/TITLE},
+
+                                           IF{/OV[PP.PER.FIELDS.physical,SUB]="*";
+                                              CNT+1^CNT=SUB^/X[1],
+                                              IF{/OV[PP.PER.FIELDS.physical,SUB]|0;SUB}^/X[2],
+
+                                              /OV[PP.PER.FIELDS.physical,SUB]|2^/X[3],
+                                              /OV[PP.PER.FIELDS.physical,SUB]|3^/X[5],
+                                              /OV[PP.PER.FIELDS.physical,SUB]|1^/X[6],
+
+                                              /OV[PP.PER.FIELDS.physical,SUB]|4^/X[7],
+                                              /OV[PP.PER.FIELDS.physical,SUB]|6^/X[7.5],
+                                              /OV[PP.PER.FIELDS.physical,SUB]|5^/X[8],
+
+                                              @NEW.LINE.NUM,
+                                              I(LM_(/X[1]:3R)_"  "_(/X[2]:11L)_" "_(/X[3]:16L)_" "_(/X[5]:4R)_"   "_(/X[6]:10L)_" "_(/X[7]:10L)_" "_(/X[7.5]:18LT)_" "_(/X[8]:5R))^@LINE,
+                                              IF{L(+/OV[PP.PER.FIELDS.physical,SUB,"SR",""])=0;
+
+                                                 @NEW.LINE.NUM," "^@LINE,
+                                                 @NEW.LINE.NUM,I(LM_(" ":24)_("----- EFFECTIVE RATES -----"))^@LINE,
+                                                 @NEW.LINE.NUM,I(LM_(" ":25)_("EFF DATE STEP   RATE"))^@LINE,
+
+                                                 @Def.buf(Y,@sec.eff.rates),
+                                                 ""^sec.eff.date,
+                                                 DO{+/OV[PP.PER.FIELDS.physical,SUB,"SR",sec.eff.date]^sec.eff.date %Z.date.out(sec.eff.date)^/X[10],
+
+                                                                                                                    /OV[PP.PER.FIELDS.physical,SUB,"SR",sec.eff.date]|0^/X[11],
+                                                                                                                    /OV[PP.PER.FIELDS.physical,SUB,"SR",sec.eff.date]|1^/X[12],
+                                                                                                                    @NEW.LINE.NUM,I(LM_(" ":25)_(/X[10]:10L)_" "_(/X[11]:2L)_(" ":3)_(/X[12]:8L))^@LINE}
+==> ,
+
+                                                 @NEW.LINE.NUM," "^@LINE}}},
+   @Kill(/OV[PP.PER.FIELDS.physical]),@Kill(/X),
+   M(@audit.trail.values,/OV[PP.PER.FIELDS.physical])},
+
+@NEW.LINE.NUM," "^@LINE
+
+
+PRINT.HEADER.2
+
+@NEW.LINE.NUM,I(LM_"                -------- CURRENT -------   ------- PREVIOUS -------")^@LINE
+
+
+NEW.LINE.NUM
+
+@Add(1,audit.report.line.number)
+
+
+LINE
+
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+
+
+PREV.LINE.HAS.INFO
+
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PP.PER.audit.report.sort.M.print.skills
+
+
+A^employee,
+
+B^audit.date,
+C^audit.time,
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 24  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+D^audit.subscript,
+E^audit.report.line.number,
+"CANADA"=@MIS.PARAM.country^CAN,
+
+audit.subscript_",0"^PP.PER.FIELDS.physical,
+IF{@audit.user^audit.user;
+   @t.audit.user^audit.user},
+
+@PRINT.SKILLS,
+audit.report.line.number;
+
+
+PRINT.SKILLS
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+@NEW.LINE.NUM,I(LM_"SKILLS:")^@LINE,
+
+; X is @audit.value.2
+""^audit.subscript.2,
+DO{@Next.get(audit.subscript.2,X) audit.subscript.2^V[1],
+
+                                  IF{X="*" "**DELETED**";"ADDED"}^V[2],
+                                  @NEW.LINE.NUM,I(LM_"    "_(V[1]:10L)_"  "_V[2])^@LINE},
+@Kill(V),
+
+@NEW.LINE.NUM," "^@LINE
+
+
+NEW.LINE.NUM
+
+@Add(1,audit.report.line.number)
+
+
+LINE
+
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+
+
+PREV.LINE.HAS.INFO
+
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PP.PER.audit.report.sort.M.print.withholdings
+
+
+A^employee,
+B^audit.date,
+
+C^audit.time,
+D^audit.subscript,
+E^audit.report.line.number,
+
+"CANADA"=@MIS.PARAM.country^CAN,
+audit.subscript_",0"^PP.PER.FIELDS.physical,
+IF{@audit.user^audit.user;
+
+   @t.audit.user^audit.user},
+@PRINT.WITHHOLDINGS,
+audit.report.line.number;
+
+
+PRINT.WITHHOLDINGS
+IF{+c.whold[""] 1^WHD.SEL},
+
+IF{@PREV.LINE.HAS.INFO @NEW.LINE.NUM," "^@LINE},
+@NEW.LINE.NUM,I(LM_"                        EMPLOYEE OVERRIDE/                FROM DATE/  ACCOUNT#/")^@LINE,
+@NEW.LINE.NUM,I(LM_"WITHHOLD    ACTIVE "_IF{"Y"=@PP.PARAM.flex "FLEX";"    "}_" EMPLOYER OVERRIDE                 THRU DATE     BOND $   ARREAR")^@LINE,
+
+; X is @audit.value.2,
+@Def.buf(X,@withholdings),""^audit.subscript.2,
+DO{@Next.get(audit.subscript.2,X) X^SAV,@Kill(V),audit.subscript.2^whold,
+
+                                  IF{WHD.SEL&@Not(c.whold[whold]);
+                                     @PP.WHOLD.mnemonic^V[1],
+                                     IF{X="*" "**DELETED**"^V[4];
+
+                                        @whold.active^V[2],
+                                        @whold.created.by.flex^V[3],
+Run on: 12292017 - 0847                                                                       Procedure List                                                                                   Page 25  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                        PP.PER.audit.report.sort
+
+                                        @whold.expressions^V[4],
+                                        @whold.account.number^V[5],
+                                        @whold.from.date^V[6],
+
+                                        @whold.thru.date^V[7],
+                                        @whold.bond.price^V[8],
+                                        @whold.employer.expr^V[9]},
+
+                                     "("_@audit.value.src_")"'="()"^V[10],
+                                     @PRINT.WHOLD.LINE.1,
+                                     ; previous values
+
+                                     IF{/OV[PP.PER.FIELDS.physical,whold]^X,'X;
+                                        IF{X="*";
+                                           @whold.active^V[12],
+
+                                           @whold.created.by.flex^V[13],
+                                           @whold.expressions^V[14],
+                                           @whold.account.number^V[15],
+
+                                           @whold.from.date^V[16],
+                                           @whold.thru.date^V[17],
+                                           @whold.bond.price^V[18],
+
+                                           @whold.employer.expr^V[19],
+                                           @PRINT.WHOLD.LINE.2}},
+                                     SAV^/OV[PP.PER.FIELDS.physical,whold]}},
+
+@Clr.buf(X),
+@NEW.LINE.NUM," "^@LINE
+
+
+PRINT.WHOLD.LINE.1
+@NEW.LINE.NUM,
+%Z.date.out(V[6])^V[6],
+
+I(LM_(" ":3)_(V[1]:8L)_"   "_(V[2]:1L)_"     "_(V[3]:1L)_"   "_(V[4]:30L)_"    "_(V[6]:8L)_"    "_(V[5]:14L)_"  "_(V[10]:3L))^@LINE,
+@NEW.LINE.NUM,
+%Z.date.out(V[7])^V[7],
+
+I(LM_(" ":3)_("":8L)_"   "_("":1L)_"     "_("":1L)_"   "_(V[9]:30L)_"    "_(V[7]:8L)_"    "_(V[8]:8R))^@LINE
+
+
+PRINT.WHOLD.LINE.2
+@NEW.LINE.NUM,
+
+%Z.date.out(V[16])^V[16],
+I(LM_(" ":3)_("  (PREV)":8L)_"   "_(V[12]:1L)_"     "_(V[13]:1L)_"   "_(V[14]:30L)_"    "_(V[16]:8L)_"    "_(V[15]:14L))^@LINE,
+@NEW.LINE.NUM,
+
+%Z.date.out(V[17])^V[17],
+I(LM_(" ":3)_("":8L)_"   "_("":1L)_"     "_("":1L)_"   "_(V[19]:30L)_"    "_(V[17]:8L)_"    "_(V[18]:8R)_"      "_(V[19.5]:3L))^@LINE
+
+
+NEW.LINE.NUM
+@Add(1,audit.report.line.number)
+
+
+LINE
+@audit.report.2.sort[V(/SF1),V(/SF2),/sort.name,employee,audit.report.line.number]
+
+
+PREV.LINE.HAS.INFO
+L(@LINE:"S")>0
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

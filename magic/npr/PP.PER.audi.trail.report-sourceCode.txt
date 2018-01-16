@@ -1,0 +1,135 @@
+Run on: 12292017 - 0835                                                                       Procedure List                                                                                   Page 1   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+URN: PP.PER.audit.trail.report                                         Active: Y   Switch Appl: Y   Access: Y   Responsible: M   Arguments:                                                             
+     Menu Logic:  @Screen(*,*)                                                     
+
+
+        PP.PER.audit.trail.report                                     Active: Y           Min Len, Width:      
+
+
+       Screen: ee                                                       Ok Prompt: %PP.PER.audit.trail.report("ok")                        Type:  2  Rpt Sched: Y   Fragment: N
+
+        Title: Audit Trail Report                                      Exit Logic:                                                         Data Segment:                          
+MultiPage Seq: N Page #?                                              Exit Prompt:                                                         Show Exit Prompt:  
+
+
+       LN +----------1---------2---------3---------4---------5---------6---------7---------8---------9-+    Sections:                       Control Repeat
+        1 |                                                                                            |    8                                 N        
+        2 |Restrict To:    Payroll(s)   Employee Status(es)                                            |    9                                 N        
+
+        3 |                 @8                @9                                                       |    10,11,20,21                       N        
+        4 |                 @8                @9                                                       |    30,31,40,41                       N        
+        5 |                 @8                @9                                                       |    55                                N        
+
+        6 |                                                                                            |    57                                N        
+        7 |From Empl Name   @10                                                                        |    60,61                             N        
+        8 |Thru Empl Name   @11                                                                        |                                               
+
+        9 |                                                                                            |                                               
+       10 |From Department  @20                                                                        |                                               
+       11 |Thru Department  @21                                                                        |                                               
+
+       12 |                                                                                            |                                               
+       13 |------------------------------------------------------------------                          |                                               
+       14 |                                                                                            |                                               
+
+       15 |From Filing Date @30              Restrict to Field(s)                                      |                                               
+       16 |Thru Filing Date @31              @55                                                       |                                               
+       17 |                                  @55                                                       |                                               
+
+       18 |From Audit User  @40              @55                                                       |                                               
+       19 |Thru Audit User  @41                                                                        |                                               
+       20 |                                  Include ** SYSTEM ** User?   @57                          |                                               
+
+       21 |                                                                                            |                                               
+       22 |------------------------------------------------------------------                          |                                               
+       23 |                                                                                            |                                               
+       24 |Primary Sort Key @60             Secondary Sort Key  @61                                    |                                               
+
+          +----------1---------2---------3---------4---------5---------6---------7---------8---------9-+
+
+
+Fields
+
+------
+     8= c.payroll                                                                                            FCL01= @Z.lastkey^SV,%PP.PER.audit.trail.wholds.S(""),SV^@Z.lastkey,""^SV}
+        FCL1=%PP.PAYROLL.security(@.new)                                                                     FCL02=IF{G="BENEFITS"
+
+        FCL1A=1                                                                                              FCL02= @Z.lastkey^SV,%PP.PER.audit.trail.benefits.S(""),SV^@Z.lastkey,""^SV}
+     9= c.status                                                                                             PRE01=@.new=@.old.ext="WITHHOLDINGS"&(@Z.lastkey=@Z.return)
+    10= b.ft.name                                                                                            PRE01A=%PP.PER.audit.trail.wholds.S(""),@Z.return^@Z.lastkey
+
+        BFI1=%PP.PER.FIELDS.init("")                                                                         PRE02=@.new=@.old.ext="BENEFITS"&(@Z.lastkey=@Z.return)
+        MAP=D(127),"BEGINNING"                                                                               PRE02A=%PP.PER.audit.trail.benefits.S(""),@Z.return^@Z.lastkey
+    11= e.ft.name                                                                                            PRE03='@.new&(@.old.ext="WITHHOLDINGS")
+
+        MAP=D(127),"END"                                                                                     PRE03A=@Kill(c.whold),""^COMMON.d.yes.no
+    20= b.dept                                                                                               PRE04='@.new&(@.old.ext="BENEFITS")
+        MAP=D(127),"BEGINNING"                                                                               PRE04A=@Kill(c.benefit),""^COMMON.c.yes.no
+
+    21= e.dept                                                                                           57= c.include.system.user
+        MAP=D(127),"END"                                                                                     DAT=YN
+    30= b.audit.date                                                                                         DFT2="Y"
+
+        MAP=D(127),"BEGINNING"                                                                               IFE=+c.field[""]_0=0!(c.field["9,0"]!(c.field["10,0"]))
+    31= e.audit.date                                                                                         LEN=1
+        LEN=9                                                                                                REQ=+c.field[""]_0=0!(c.field["9,0"]!(c.field["10,0"]))
+
+        MAP=D(127),"END"                                                                                 60= c.audit.report.pri.sort
+    40= b.audit.user                                                                                         FCL1=@.new=c.audit.report.sec.sort
+Run on: 12292017 - 0835                                                                       Procedure List                                                                                   Page 2   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+        ID.ARG=BA                                                                                            FCL1A=@W.err("Cannot be the same as the secondary sort key. ")
+        MAP=D(127),"BEGINNING"                                                                               REQ=N
+    41= e.audit.user                                                                                     61= c.audit.report.sec.sort
+
+        ID.ARG=BA                                                                                            FCL1=@.new=c.audit.report.pri.sort
+        MAP=D(127),"END"                                                                                     FCL1A=@W.err("Cannot be the same as the primary sort key. ")
+    55= c.field                                                                                              IFE=c.audit.report.pri.sort
+
+        FCL01=IF{G="WITHHOLDINGS"                                                                            REQ=N
+
+
+
+
+PP.PER.audit.trail.report
+
+
+@Translate.as.haltable,
+
+; PP.PER.audit.trail.report
+;
+; This routine prints the audit trail report
+
+;
+IF{A="ok" @OK.LOGIC;
+   @PRINT.REPORT};
+
+
+OK.LOGIC
+IF{@Not(+c.payroll[""]) @W.err("RESTRICT TO PAYROLL missing. "),"";
+
+   IF{+c.field[""]_0=0!(c.field["9,0"]!(c.field["10,0"]));
+      c.include.system.user ""^c.include.system.user,
+                            @Display(c.include.system.user)},
+
+   %Z.on.device("")}
+
+
+PRINT.REPORT
+
+IF{+c.field[""]_0=0 ""^PP.PER.FIELDS.physical,
+                    DO{@Next(PP.PER.FIELDS.physical) 1^c.field[PP.PER.FIELDS.physical]}},
+O(/)="P"^MBT,
+
+IF{MBT %Z.move.slash("D")},
+%PP.PER.audit.report.sort("")X,
+IF{MBT %Z.move.slash("M",1),
+       IF{%.DTEMP[@.job] F(%.DTEMP[@.job])}}
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

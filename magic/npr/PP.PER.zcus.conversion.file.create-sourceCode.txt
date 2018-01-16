@@ -1,0 +1,1078 @@
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 1   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+URN: PP.PER.zcus.conversion.file.create                                Active: Y   Switch Appl: Y   Access: Y   Responsible: M   Arguments:                                                             
+     Menu Logic:  @Screen(*,*)                                                     
+
+
+        PP.PER.zcus.conversion.file.create                            Active: Y           Min Len, Width:      
+
+
+       Screen: list                                                     Ok Prompt: Ok to create?                                           Type:  2  Rpt Sched: N   Fragment: N
+
+        Title: Create Personnel Conversion File                        Exit Logic:                                                         Data Segment:                          
+MultiPage Seq: N Page #?                                              Exit Prompt:                                                         Show Exit Prompt:  
+
+
+       LN +----------1---------2---------3---------4---------5---------6---------7---------8---------9-+    Sections:                       Control Repeat
+        1 |                                                                                            |    05                                N        
+        2 |This routine will create a conversion file of Personnel records and download that file to   |    07,08                             N        
+
+        3 |a path on the user's PC specified by the user.  While the file is being created, all users  |    10                                N        
+        4 |will be *Locked* out of the Payroll module to ensure a clean create.                        |                                               
+        5 |                                                                                            |                                               
+
+        6 |The file created by this routine should be carefully labled with the database and creation  |                                               
+        7 |date information.                                                                           |                                               
+        8 |                                                                                            |                                               
+
+        9 |Cutoff Date                                                                                 |                                               
+       10 |@05                                                                                         |                                               
+       11 |                                                                                            |                                               
+
+       12 |Extract Last Names                                                                          |                                               
+       13 |From   @07                                                                                  |                                               
+       14 |Thru   @08                                                                                  |                                               
+
+       15 |                                                                                            |                                               
+       16 |Payroll CDS fields                                                                          |                                               
+       17 |@10                                                                                         |                                               
+
+       18 |@10                                                                                         |                                               
+       19 |@10                                                                                         |                                               
+       20 |@10                                                                                         |                                               
+
+          +----------1---------2---------3---------4---------5---------6---------7---------8---------9-+
+
+
+Fields
+------
+
+    05= c.cutoff                                                                                             DAT=FREE
+        DAT=DATE                                                                                             FCL01=@.new'?1A
+        LEN=8                                                                                                FCL01A=@W.err("Must be A-Z!")
+
+        REQ=N                                                                                                FCL02=c.letter.from&(@.new<c.letter.from)
+    07= c.letter.from                                                                                        FCL02A=@W.err("Thru cannot be less than from!")
+        DAT=FREE                                                                                             LEN=1
+
+        FCL01=@.new'?1A                                                                                      REQ=N
+        FCL01A=@W.err("Must be A-Z!")                                                                    10= c.pay.cds
+        FCL02=c.letter.thru&(@.new>c.letter.thru)                                                            DAT=FREE
+
+        FCL02A=@W.err("From cannot be greater than thru!")                                                   ID=%Z.id.dict(^\GGV,A,"","CD_"_D(34)_" - "_D(34)_"_\GGV[CD]|1","BR",
+        LEN=1                                                                                                ID="CDS Query Lookup":75LT)
+        REQ=N                                                                                                LEN=18
+
+    08= c.letter.thru
+
+
+
+
+PP.PER.zcus.conversion.file.create
+
+
+@SETUP,
+
+IF{@UNABLE.TO.OPEN.PC.FILE @ERR.MSG;
+   @CREATE.FILE,
+   @DOWNLOAD.FILE,
+
+   @CLEANUP,
+   @W.return("File Created.")},
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 2   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+END;
+
+
+SETUP
+
+%Z.pc(""),
+@ALLOCATE.RAF
+
+
+UNABLE.TO.OPEN.PC.FILE
+%Z.dos.link.long("")^PCF,
+IF{'PCF "No filename given - Extract Aborted"}^ERR
+
+
+ERR.MSG
+@W.err(ERR)
+
+
+CREATE.FILE
+; * ASCII data encoded
+
+; * Uncompressed files
+; * Record length is 256 characters
+; * Fixed length records with standard DOS CR/LF delimiter
+
+;
+@HEADER.RECORD,
+@W.display("Writing Employees to file: "),
+
+""^sort.name^employee,
+DO{@Next(employee,@name.x)&@Not(ERR) @CHECK.TC;
+   @Next(sort.name,@name.x)&@Not(ERR)},
+
+@TRAILER.RECORD,
+@W.display("")
+
+
+CHECK.TC
+""^GOOD,
+@status^ST,
+
+IF{"TERM"=ST&(@Last(PP.PAY.pay.date,@PP.PAY.pay.x)>c.cutoff) 1^GOOD},
+IF{"ACTIVE"=ST!("LEAVE"=ST)!("ON CALL"=ST) 1^GOOD},
+;IF{c.letter.from&(c.letter.thru) @CHECK.NAME},
+IF{GOOD @EMPLOYEE.RECORD}
+
+
+;CHECK.NAME
+;@sort.name#0^TEST,
+
+;c.letter.from^START,
+;c.letter.thru^END,
+;IF{(TEST'<START)&(TEST'>END);""^GOOD}
+
+
+HEADER.RECORD
+; Record Type (1 - 2)
+
+01^/REC,
+; Tape Identifier (3 - 62)
+/REC_("PERSONNEL FILE - "_@MIS.PARAM.name_" - "_@.db:60LT)^/REC,
+
+; Tape Creation Date (63 - 70)
+/REC_(@.today:8L)^/REC,
+; Filler (71 - 249)
+
+/REC_(" ":179)^/REC,
+@WRITE.RECORD
+
+
+EMPLOYEE.RECORD
+""^PFX,
+; Record 10 - Personnel Info - Part 1
+
+@Macro(record.10),
+; Record 11 - Personnel Info - Part 2
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 3   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+@Macro(record.11),
+; Record 12 - Dependant Data
+""^dp.number,
+
+DO{@Next(dp.number) @Macro(record.12)},
+; Record 15 - Personnel Multi-Pay Info - Part 1
+@Macro(record.15),
+
+; Record 16 - Personnel Multi-Pay Info - Part 2
+""^eff.date,
+DO{@Next(eff.date) @Macro(record.16)},
+
+; Record 20 - Skills
+""^skill,
+DO{@Next(skill) @Macro(record.20)},
+
+; Record 25 - Direct Deposit
+""^dd.pro.counter,
+DO{@Next(dd.pro.counter) @Macro(record.25)},
+
+; Record 30 - Secondary Jobs
+""^sec.job.counter,
+DO{@Next(sec.job.counter) @Macro(record.30)},
+
+; Record 35 - Benefits
+""^benefit,
+DO{@Next(benefit) @Macro(record.35)},
+
+; Record 40 - Withholdings
+""^whold,
+DO{@Next(whold) @Macro(record.40)},
+
+; Record 42 - Supplemental Earnings
+""^earning.counter,
+DO{@Next(earning.counter) @Macro(record.42)},
+
+; Record 45 - Customer Defined Queries & Responses
+""^cd.query,
+;DO{@Next(cd.query) @Macro(record.45)},
+
+; Record 46 - Miscellaneous Fields (Payroll Queries)
+@Macro(misc.fields)
+
+
+TRAILER.RECORD
+
+; Record Type (1 - 2)
+99^/REC,
+; Filler (3 - 249)
+
+/REC_(" ":247)^/REC,
+@WRITE.RECORD
+
+
+UPDATE.RECORD
+1+/CNT^/CNT,
+/REC^!W[/CNT]
+
+
+WRITE.RECORD
+1+/CNT^/CNT,
+
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+-------------------------------------------------------------------------------------------
+
+
+ALLOCATE.RAF
+IF{%[".pp.per.conv.download",/.DEV] F(%[".pp.per.conv.download",/.DEV])},
+
+O(!,A(1,%[".pp.per.conv.download",/.DEV]))
+
+
+CLEANUP
+
+C(!),
+IF{%[".pp.per.conv.download",/.DEV] F(%[".pp.per.conv.download",/.DEV])}
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 4   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+
+DOWNLOAD.FILE
+@W.display("Downloading Data ..."),
+
+%Z.dos.write(^!W,PCF)^OK,
+@W.display(""),
+IF{OK'="Done" @W.err(OK," - File not Saved")}
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.misc.fields
+
+
+@Est.buf(M,@misc.fields),
+@Est.buf(JY,@main),
+
+@Est.buf(JY7,@payroll.fields),
+; Misc to Personnel CDSs
+0^FIELD.NUM,
+
+DO{FIELD.NUM+1^FIELD.NUM<13 %MIS.MAP.get.value("PPMISC","MISC "_FIELD.NUM)^MM,
+                            MM|0^cd.query,
+                            IF{@Not(cd.query);
+
+                               ;c.pay.cds[cd.query];
+                               V("M|"_FIELD.NUM)^MISC.VALUE,
+                               @Not(MISC.VALUE);
+
+                               45_(PFX_@number:14LT)^/REC,
+                               /REC_(cd.query:10LT)^/REC,
+                               /REC_(MISC.VALUE:75LT)^/REC,
+
+                               /REC_(" ":125)^/REC,
+                               @WRITE.RECORD}},
+;**Gather the Personnel Queries
+
+""^cd.query,
+DO{@Next(cd.query) IF{%MIS.MAP.get.value("PP.PAY.QUERY",cd.query);
+                      @Est.buf(CD,@customer.defined.queries),
+
+                      ; Record Type (1 - 2)
+                      45^/REC,
+                      ; Employee number (3 - 16)
+                      /REC_(PFX_@number:14LT)^/REC,
+
+                      ; CDS Query (17 - 26)
+                      /REC_(cd.query:10LT)^/REC,
+                      ; CDS Response (27 - 101)
+
+                      /REC_(@cd.response:75LT)^/REC,
+                      ; Filler (102 - 249)
+                      /REC_(" ":125)^/REC,
+
+                      @WRITE.RECORD,
+                      @Clr.buf(CD)}},
+; Misc to Payroll CDSs
+
+0^FIELD.NUM,
+DO{FIELD.NUM+1^FIELD.NUM<13 %MIS.MAP.get.value("PPMISCPAY","MISC "_FIELD.NUM)^MM,
+                            MM|0^cd.query,
+
+                            IF{@Not(cd.query);
+                               ;@Not(c.pay.cds[cd.query]);
+                               V("M|"_FIELD.NUM)^MISC.VALUE,
+
+                               @Not(MISC.VALUE);
+                               46_(PFX_@number:14LT)^/REC,
+                               /REC_(@payroll:8LT)^/REC,
+
+                               /REC_(cd.query:10LT)^/REC,
+                               /REC_(MISC.VALUE:75LT)^/REC,
+                               /REC_(" ":109)^/REC,
+
+                               @WRITE.RECORD}},
+@Clr.buf(M),
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 5   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+;**Gather the Payroll Queries
+""^cd.query,
+DO{@Next(cd.query) %MIS.MAP.get.value("PP.PAY.QUERY",cd.query)^MM,
+
+                   IF{@Not(MM);
+                      MM|0^cd.query,
+                      @Est.buf(CD,@customer.defined.queries),
+
+                      ; Record Type (1 - 2)
+                      46^/REC,
+                      ; Employee number (3 - 16)
+
+                      /REC_(PFX_@number:14LT)^/REC,
+                      ; Employee Payroll
+                      /REC_(@payroll:8LT)^/REC,
+
+                      ; CDS Query (17 - 26)
+                      /REC_(cd.query:10LT)^/REC,
+                      ; CDS Response (27 - 101)
+
+                      /REC_(@cd.response:75LT)^/REC,
+                      ; Filler (102 - 249)
+                      /REC_(" ":109)^/REC,
+
+                      @WRITE.RECORD,
+                      @Clr.buf(CD)}},
+@Clr.buf(JY7),
+
+@Clr.buf(JY)
+
+
+QUERY.MULTI
+
+"Y"=@MIS.QUERY.multiple
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.10
+
+
+@W.display.offset(28,@name),
+
+; Record Type (1 - 2)
+10^/REC,
+@Est.buf(JY,@main),
+
+; Employee Number (3 - 16)
+/REC_(PFX_@number:14LT)^/REC,
+; Social Security Number (17 - 28)
+
+/REC_(@si.number:12LT)^/REC,
+; Employee Name (29 - 54)
+/REC_(@name:26LT)^/REC,
+
+@Est.buf(JY0,@address.fields),
+; Address Line 1 (55 - 84)
+/REC_(@address1:30LT)^/REC,
+
+; Address Line 2 (85 - 114)
+/REC_(@address2:30LT)^/REC,
+; City (115 - 132)
+
+/REC_(@city:18LT)^/REC,
+; State (133 - 134)
+/REC_(@state:2LT)^/REC,
+
+; Postal Code (135 - 144)
+/REC_(@postal.code:10LT)^/REC,
+; Country Choice (145 - 150)
+
+/REC_(IF{@.country="CANADA" @t4.country.choice;
+         @other.country.choice}:6LT)^/REC,
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 6   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+; Country Name (151 - 160)
+/REC_(IF{@.country="CANADA" @t4.country;
+         @other.country}:10LT)^/REC,
+
+@Clr.buf(JY0),
+; Home Phone (161 - 178)
+/REC_(@home.phone:18LT)^/REC,
+
+; Emergency Phone (179 - 196)
+/REC_(@emergency.phone:18LT)^/REC,
+; Date of Birth (197 - 204)
+
+/REC_(@date.of.birth:8L)^/REC,
+; Sex (205 - 205)
+/REC_(@sex:1LT)^/REC,
+
+; EEOC Category (206 - 223)
+/REC_(IF{@eeoc="BLACK" "BLACK/AFRICAN AMER";
+         @eeoc="HISPANIC" "HISPANIC/LATINO";
+
+         @eeoc}:18LT)^/REC,
+;GNJ - 08/14/2009 TASK 6238604
+;Add employee URN to record to load into C/S
+
+; Employee URN (224-233)
+;/REC_(employee:10LT)^/REC,
+; Filler  - 249
+
+;/REC_(" ":13)^/REC,
+/REC_(@mis.user:10LT)^/REC,
+@Clr.buf(JY),
+
+@WRITE.RECORD
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.11
+
+
+@Est.buf(JY1,@position.fields),
+
+@Est.buf(JYM,@more1),
+; Record Type (1 - 2)
+11^/REC,
+
+; Employee Number (3 - 16)
+/REC_(PFX_@number:14LT)^/REC,
+; Employee Type (17 - 21)
+
+/REC_(@empl.type:5LT)^/REC,
+; Employee Status (22 - 28)
+/REC_(IF{@status="DECEASD" "RETIRED";@status}:7LT)^/REC,
+
+; Employee Status Date (29 - 36)
+/REC_(@status.date:8LT)^/REC,
+; Employee Status Reason (37 - 46)
+
+/REC_(@status.reason:10LT)^/REC,
+; Hire Date (47 - 54)
+/REC_(@hire.date:8LT)^/REC,
+
+; Adjusted Hire Date (55 - 62)
+/REC_(@adjusted.hire.date:8LT)^/REC,
+; Seniority Date (63 - 70)
+
+/REC_(@seniority.date:8LT)^/REC,
+; Next Evaluation Date (71 - 78)
+/REC_(@evaluation.date:8LT)^/REC,
+
+; Next Review Date (79 - 86)
+/REC_(@next.review.date:8LT)^/REC,
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 7   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+; Review Date Reason (87 - 96)
+/REC_(@next.review.reason:10LT)^/REC,
+; Exempt (97 - 97)
+
+/REC_(@exempt:1LT)^/REC,
+; Health Insurance Flag (98 - 98)
+/REC_(@health.insurance:1LT)^/REC,
+
+; Disability Flag (99 - 99)
+/REC_(@disability:1LT)^/REC,
+;Employee Type Date field (100 - 107)
+
+/REC_(@empl.type.date:8LT)^/REC,
+;Employee Marital Status (108 - 117)
+/REC_(@marital.status:10LT)^/REC,
+
+;Email Address (118-157)
+/REC_(@email.address:40LT)^/REC,
+; Filler (157 - 249)
+
+/REC_(" ":91)^/REC,
+@WRITE.RECORD,
+@Clr.buf(JY1),
+
+@Clr.buf(JYM)
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.12
+
+
+@Est.buf(JY,@main),
+;IF{'@First(@PP.PER.dp.number,@PP.PER.dependents);
+""^dp.number,
+
+;DO{@Next(dp.number) @Est.buf(DP,@dependents),
+@Est.buf(DP,@dependents),
+@Est.buf(DPA,@dependent.address.fields),
+12^/REC,
+
+/REC_(PFX_@number:14LT)^/REC,
+/REC_(@dp.name:26LT)^/REC,
+/REC_(@dp.ss.number:12LT)^/REC,
+
+/REC_(@dp.birthdate:8LT)^/REC,
+/REC_(@dp.relationship:10LT)^/REC,
+/REC_(@dp.address1:30LT)^/REC,
+
+/REC_(@dp.city:18LT)^/REC,
+/REC_(@dp.state:2LT)^/REC,
+/REC_(@dp.postal.code:10LT)^/REC,
+
+/REC_(@dp.home.phone:18LT)^/REC,
+/REC_(@dp.emergency.phone:18LT)^/REC,
+@WRITE.RECORD,
+
+@Clr.buf(DP),
+@Clr.buf(DPA),
+@Clr.buf(JY)
+
+
+WRITE.RECORD
+1+/CNT^/CNT,
+
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PP.PER.zcus.conversion.file.create.M.record.15
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 8   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+@Est.buf(JY,@main),
+@Est.buf(JY7,@payroll.fields),
+@Est.buf(JY1,@position.fields),
+
+; Record Type (1 - 2)
+15^/REC,
+; Employee Number (3 - 16)
+
+/REC_(PFX_@number:14LT)^/REC,
+; Payroll (17 - 24)
+/REC_(@payroll:8LT)^/REC,
+
+; Payroll Active Flag (25 - 25)
+/REC_(@PP.PAYROLL.active[@payroll])^/REC,
+; Primary Payroll (26 - 26)
+
+/REC_("Y")^/REC,
+; Scheduled Hours (27 - 32)
+/REC_(0:6'$L(@hours.per.period^z)_z:6T)^/REC,
+
+; Contract (33 - 40)
+/REC_(@contract:8LT)^/REC,
+; Position Number (41 - 58)
+
+/REC_(@position.number:18LT)^/REC,
+; Job Code (59 - 68)
+/REC_(@job.code:10LT)^/REC,
+
+; Department (69 - 83)
+/REC_(@dept:15LT)^/REC,
+; Shift (84 - 84)
+
+/REC_(@shift:1L)^/REC,
+; Shift Date (85 - 92)
+/REC_(@shift.date:8L)^/REC,
+
+; Calculate FLSA Per Week  (93 - 93)
+/REC_(@flsa.per.week.calc:1LT)^/REC,
+; FIT Status (94 - 94)
+
+/REC_(@fit.tax.status:1LT)^/REC,
+; FIT Exemptions (95 - 96)
+/REC_(%Z.zero.fill(@fit.exemptions,2,0))^/REC,
+; SIT Status (97 - 97)
+
+/REC_(@sit.tax.status:1LT)^/REC,
+; SIT Exemptions (98 - 99)
+/REC_(%Z.zero.fill(@sit.exemptions,2,0))^/REC,
+
+; W2 Pension (100 - 100)
+/REC_(@pension:1LT)^/REC,
+; W2 Statutory (101 - 101)
+
+/REC_(@statutory:1LT)^/REC,
+; TD1 Exemption (102 - 108)
+/REC_(%Z.zero.fill(@td1.exemption,7,2))^/REC,
+
+; Qualification Differential (109 - 116)
+/REC_(0:8'$L(@qual.diff^z)_z:8T)^/REC,
+; T4 CPP/QPP (117 - 117)
+
+/REC_(@t4.cpp.qpp.exempt:1LT)^/REC,
+; T4 UI Exempt (118 - 118)
+/REC_(@t4.ei.exempt:1LT)^/REC,
+
+; Insurance Coverage (119 - 158)
+/REC_(@insurance.coverage:40LT)^/REC,
+; W2 Third Party Sick Pay (159 - 159)
+
+/REC_(@third.party.sick.pay:1LT)^/REC,
+;Hrs Per Period Date Field (160 - 167)
+/REC_(@hrs.per.period.date:8LT)^/REC,
+
+;Added Position Effective Date work around
+/REC_(IF{@position.date;@First(eff.date)}:8LT)^/REC,
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 9   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+;PP.PER.tc.hours.pro.elig
+/REC_(@tc.hours.pro.elig:1LT)^/REC,
+;PP.PER.tc.hours.pro.pri.pct
+
+/REC_(@tc.hours.pro.pri.pct:6LT)^/REC,
+; Filler (168 - 249)
+/REC_(" ":65)^/REC,
+
+@WRITE.RECORD,
+@Clr.buf(JY7),
+@Clr.buf(JY1),
+
+@Clr.buf(JY)
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.16
+
+
+@Est.buf(JY,@main),
+@Est.buf(JY7,@payroll.fields),
+;IF{'@First(@PP.PER.eff.date,@PP.PER.eff.base.rates);
+
+;""^eff.date,
+;DO{@Next(eff.date) @Est.buf(JY13,@eff.base.rates),
+@Est.buf(JY13,@eff.base.rates),
+
+; Record Type (1 - 2)
+16^/REC,
+; Employee Number (3 - 16)
+
+/REC_(PFX_@number:14LT)^/REC,
+; Payroll (17 - 24)
+/REC_(@payroll:8LT)^/REC,
+
+; Base Rate Date (25 - 32)
+/REC_(@eff.date:8L)^/REC,
+; Base Rate (33 - 40)
+/REC_(0:8'$L(@eff.rate^z)_z:8T)^/REC,
+
+; Step (41 - 42)
+/REC_(@eff.step:2LT)^/REC,
+; Base Rate Reason (43 - 52)
+
+/REC_(@eff.reason:10LT)^/REC,
+; Filler (53 - 249)
+/REC_(" ":196)^/REC,
+
+@WRITE.RECORD,
+@Clr.buf(JY3),
+@Clr.buf(JY7),
+
+@Clr.buf(JY)
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.20
+
+
+@Est.buf(JY,@main),
+;IF{'@First(@PP.PER.skill,@PP.PER.skills);
+;""^skill,
+
+;DO{@Next(skill) 20^/REC,
+20^/REC,
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 10  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+; Employee Number (3 - 16)
+/REC_(PFX_@number:14LT)^/REC,
+; Skills (17 - 26)
+
+/REC_(skill:10LT)^/REC,
+; misc skills fields we are filling with blanks
+/REC_(" ":54)^/REC,
+
+; Filler (83 - 249)
+/REC_(" ":166)^/REC,
+@WRITE.RECORD,
+
+@Clr.buf(JY)
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.25
+
+
+@Est.buf(JY,@main),
+@Est.buf(JY7,@payroll.fields),
+;""^dd.pro.counter,
+
+;DO{@Next(dd.pro.counter) @Est.buf(JY2,@dd.proration),
+@Est.buf(JY2,@dd.proration),
+; Record Type (1 - 2)
+
+25^/REC,
+; Employee Number (3 - 16)
+/REC_(PFX_@number:14LT)^/REC,
+
+; Payroll (17 - 24)
+/REC_(@payroll:8LT)^/REC,
+; Direct Deposit Proration Method (25 - 25)
+
+/REC_(@dd.proration.method:1LT)^/REC,
+; Direct Deposit Type (26 - 32)
+/REC_(@dd.pro.type:7LT)^/REC,
+; Direct Deposit Bank (33 - 49)
+
+/REC_(@dd.pro.bank:17LT)^/REC,
+; Direct Deposit Account Number (50 - 66)
+/REC_(@dd.pro.account.number:17LT)^/REC,
+
+; Direct Deposit Account Type (67 - 67)
+/REC_(@dd.pro.account.type:1LT)^/REC,
+; Direct Deposit Account Value (68 - 77)
+
+/REC_(@dd.pro.value:10LT)^/REC,
+; Filler (78 - 249)
+/REC_(" ":171)^/REC,
+
+@WRITE.RECORD,
+@Clr.buf(JY2),
+@Clr.buf(JY7),
+
+@Clr.buf(JY)
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.30
+
+
+@Est.buf(JY,@main),
+@Est.buf(JY7,@payroll.fields),
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 11  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+;IF{'@First(@PP.PER.sec.job.counter,@PP.PER.sec.jobs);
+;""^sec.job.counter,
+;DO{@Next(sec.job.counter) @Est.buf(SJ,@sec.jobs),
+
+@Est.buf(SJ,@sec.jobs),
+30^/REC,
+; Employee Number (3 - 16)
+
+/REC_(PFX_@number:14LT)^/REC,
+; Payroll (17 - 24)
+/REC_(@payroll:8LT)^/REC,
+
+; Write Secondary Job Info here
+/REC_(@sec.job:10LT)^/REC,
+/REC_(@sec.job.dept:15LT)^/REC,
+
+/REC_(@sec.job.contract:8LT)^/REC,
+@Clr.buf(SJ),
+; Loop on Secondary Job Multiple here
+
+@LOOP.RATES,
+; Filler (148 - 249)
+/REC_(@sec.job.hrs.percent:6LT)^/REC,
+
+/REC_(" ":95)^/REC,
+@WRITE.RECORD
+
+
+LOOP.RATES
+1^CNT,""^eff.date,
+DO{@Prev(sec.eff.date)&(CNT'>5) @Add(1,CNT),
+
+                                @Est.buf(SJR,@sec.eff.rates),
+                                /REC_(sec.eff.date:8LT)^/REC,
+                                /REC_(@sec.eff.step:2LT)^/REC,
+
+                                /REC_(@sec.eff.rate:8LT)^/REC,
+                                @Clr.buf(SJR)}
+
+
+WRITE.RECORD
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.35
+
+
+@Est.buf(JY,@main),
+@Est.buf(JY7,@payroll.fields),
+;IF{'@First(@PP.PER.benefit,@PP.PER.benefit.balances);
+
+;""^benefit,
+;DO{@Next(benefit) @Est.buf(JY9,@benefit.balances),
+@Est.buf(JY9,@benefit.balances),
+
+; Record Type (1 - 2)
+35^/REC,
+; Employee Number (3 - 16)
+
+/REC_(PFX_@number:14LT)^/REC,
+; Payroll (17-24)
+/REC_(@payroll:8LT)^/REC,
+
+; Benefit number (25 - 32)
+/REC_(benefit:8LT)^/REC,
+; Benefit Plan (33 - 40)
+
+/REC_(@benefit.plan:8LT)^/REC,
+; Benefit Available Hours (41 - 49)
+/REC_%Z.zero.fill(@benefit.avail.balance,9,3)^/REC,
+
+; Benefit Accrued Hours (50 - 58)
+/REC_%Z.zero.fill(@benefit.accrued.balance,9,3)^/REC,
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 12  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+;Benefit Freeze Flag (59 - 59)
+/REC_(@benefit.freeze:1LT)^/REC,
+; Filler (59 - 249)
+
+/REC_(" ":188)^/REC,
+@WRITE.RECORD,
+@Clr.buf(JY9),
+
+@Clr.buf(JY7),
+@Clr.buf(JY)
+
+
+WRITE.RECORD
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.40
+
+
+@Est.buf(JY,@main),
+@Est.buf(JY7,@payroll.fields),
+
+;IF{'@First(@PP.PER.whold,@PP.PER.withholdings);
+;DO{@Next(whold) @Est.buf(JY10,@withholdings),
+@Est.buf(JY10,@withholdings),
+
+; Record Type (1 - 2)
+40^/REC,
+; Employee Number (3 - 16)
+
+/REC_(PFX_@number:14LT)^/REC,
+; Payroll (17 - 24)
+/REC_(@payroll:8LT)^/REC,
+
+; Withholding Number (25 - 32)
+/REC_(whold:8LT)^/REC,
+; Withholding Employee Override (33 - 62)
+
+/REC_(@whold.expressions:30LT)^/REC,
+; Withholding Employer Override (63 - 92)
+/REC_(@whold.employer.expr:30LT)^/REC,
+; Withholding Account Number (93 - 106)
+
+/REC_(@whold.account.number:14LT)^/REC,
+; Withholding From Date (107 - 114)
+/REC_(@whold.from.date:8L)^/REC,
+
+; Withholding Through Date (115 - 122)
+/REC_(@whold.thru.date:8L)^/REC,
+; Withholding Bond Price (123 - 129)
+
+/REC_%Z.zero.fill(@whold.bond.price,7,2)^/REC,
+; Withholding Receivable Balance (130 - 136)
+/REC_%Z.zero.fill(@whold.balance,7,2)^/REC,
+
+/REC_(@whold.created.by.flex:1LT)^/REC,
+; Filler - 249
+/REC_(" ":111)^/REC,
+
+@WRITE.RECORD,
+@Clr.buf(JY10),
+@Clr.buf(JY7),
+
+@Clr.buf(JY)
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.42
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 13  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+
+@Est.buf(JY,@main),
+@Est.buf(JY7,@payroll.fields),
+
+;IF{'@First(@PP.PER.earning.counter,@PP.PER.earnings);
+;""^earning.counter,
+;DO{@Next(earning.counter) @Est.buf(JYE,@earnings),
+
+@Est.buf(JYE,@earnings),
+; Record Type (1 - 2)
+42^/REC,
+
+; Employee Number (3 - 16)
+/REC_(PFX_@number:14LT)^/REC,
+; Payroll (17-24)
+
+/REC_(@payroll:8LT)^/REC,
+; Earning number (25 - 32)
+/REC_(@earning:8LT)^/REC,
+
+; Earning Expression (33 - 62)
+/REC_(@earning.expression:8LT)^/REC,
+; Earning Freeze (63 - 63)
+
+/REC_(@earning.freeze:1LT)^/REC,
+; Filler (64 - 249)
+/REC_(" ":186)^/REC,
+
+@WRITE.RECORD,
+@Clr.buf(JYE),
+@Clr.buf(JY7),
+
+@Clr.buf(JY)
+
+
+WRITE.RECORD
+
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.zcus.conversion.file.create.M.record.45
+
+
+@Est.buf(JY,main),
+
+;""^cd.query,
+;IF{@Next(cd.query) IF{c.pay.cds[cd.query];
+;DO{@Next(cd.query) IF{c.pay.cds[cd.query];
+
+;IF{'@First(@PP.PER.cd.query,@PP.PER.customer.defined.queries);
+;DO{@Next(cd.query) @QUERY.MULTI,
+IF{%MIS.MAP.get.value("PP.PAY.QUERY",cd.query)^MM MM|0^cd.query,
+
+                                                  46^Q.TYPE;
+   45^Q.TYPE},
+IF{@QUERY.MULTI ""^cdm.seq.no,
+
+                DO{@Add(1,cdm.seq.no)'>@Last(cdm.seq.no) Q.TYPE^/REC,
+                                                         ; Employee number (3 - 16)
+                                                         /REC_(PFX_@number:14LT)^/REC,
+
+                                                         ; CDS Query (17 - 26)
+                                                         /REC_(cd.query:10LT)^/REC,
+                                                         ; CDS Response (27 - 101)
+
+                                                         /REC_(@cdm.response:0X:0S:75LT)^/REC,
+                                                         ; Filler (102 - 249)
+                                                         /REC_(" ":125)^/REC,
+
+                                                         @WRITE.RECORD};
+   @Est.buf(CD,@customer.defined.queries),
+   @Not(@cd.response);
+
+   ; Record Type (1 - 2)
+   Q.TYPE^/REC,
+Run on: 12292017 - 0843                                                                       Procedure List                                                                                   Page 14  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                   PP.PER.zcus.conversion.file.create
+
+   ; Employee number (3 - 16)
+   /REC_(PFX_@number:14LT)^/REC,
+   ; CDS Query (17 - 26)
+
+   /REC_(cd.query:10LT)^/REC,
+   ; CDS Response (27 - 101)
+   /REC_(@cd.response:75LT)^/REC,
+
+   ; Filler (102 - 249)
+   /REC_(" ":125)^/REC,
+   @WRITE.RECORD},
+
+@Clr.buf(CD),
+@Clr.buf(JY)
+
+
+QUERY.MULTI
+"Y"=@MIS.QUERY.multiple
+
+
+WRITE.RECORD
+1+/CNT^/CNT,
+/REC_@Z.cr.lf^!W[/CNT]
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

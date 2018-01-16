@@ -1,0 +1,341 @@
+Run on: 12292017 - 0829                                                                       Procedure List                                                                                   Page 1   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                         AP.INV.view.trans.det
+
+
+AP.INV.view.trans.det.S
+
+
+AP.INV.view.trans.det.S,MA4,POU.5.62.MIS,5.62,09.12.17.1826,"COLOR",
+^$.[/.T]^T,
+1^/ZSPOOL.NEW.JOB,
+
+IF{/.GUI /G.MSE^G.MSE.SV,
+         1^/G.MSE,
+         %AP.INV.view.trans.det.S["M"]("ST"),
+
+         %AP.INV.view.trans.det.S["M"]("INIT")},
+IF{/.BUFF O(#B)},
+IF{/exit.nub ""^/exit.nub;D(2,0)^#},Q(/.WH,/.WW)_/.WZ^/.WZ,
+
+D(23,4,0,23-/.P,92,1)^#,
+92^/.WW,
+23-/.P^/.WH,
+
+IF{\GU[/.USR]BPS V(\GU[/.USR]BPS)^#;%["Z.chg.palettes"^E] %[E]("SCRN")},
+IF{/.GUI D(30)_"CC"_{("View Transactions Detail":92TL,
+                     "")}^#,
+
+         "View Transactions Detail"^/.SCRN.TITLE[/.SCRN.TITLE+1^/.SCRN.TITLE];
+   ("View Transactions Detail":92CT)^#,
+   D(16,1-/.P,0,4,0)^#},
+
+P(6-/.P,0,IF{*KZ[/kz]M["C"]|1 "From Appl";""})^#,
+P(2-/.P,0,"Vendor")P(4-/.P,0,"Invoice")P(4-/.P,27,"Inv Type")P(4-/.P,58,"Inv Date")^#,
+P(6-/.P,27,"Status")P(6-/.P,58,"Bank Acc")P(8-/.P,0,"Description")P(10-/.P,0,"Gr")^#,
+
+P(10-/.P,15,"Tax")P(10-/.P,30,"Frt")P(10-/.P,45,"Dis")P(10-/.P,61,"Pay")P(10-/.P,77,"Bal")^#,
+P(11-/.P,0,D(4,3,92))^#,
+P(12-/.P,0,"Txn #")P(12-/.P,15,"Txn Date")P(12-/.P,35,"Batch #")P(12-/.P,51,"Batch Txn #")^#,
+
+P(12-/.P,71,"GL Period")P(13-/.P,11,"Txn Rcv Date")P(13-/.P,35,"User")P(13-/.P,72,"Bank Acc")^#,
+P(15-/.P,0,"Comment")P(17-/.P,0,"Check #")P(17-/.P,20,"Status")P(17-/.P,39,"Status Date")^#,
+P(17-/.P,67,"Previous Bal")P(18-/.P,0,"EDI Session")P(19-/.P,0,"Gr")P(19-/.P,15,"Tax")^#,
+
+P(19-/.P,30,"Frt")P(19-/.P,45,"Dis")P(19-/.P,61,"Pay")P(19-/.P,77,"Bal")^#,
+P(20-/.P,0,D(4,3,92))^#,
+P(22-/.P,13,"View Txn Input Lines?")P(22-/.P,48,"View Txn GL Dist?")^#,
+D(1,2)^#,
+
+D(16,12-/.P,7,5,0,1,3)^#,
+D(16,12-/.P,25,5,0,1,8)^#,
+D(16,13-/.P,25,5,0,1,8)^#,
+
+D(16,13-/.P,44,5,0,1,10)^#,
+D(16,12-/.P,44,5,0,1,3)^#,
+D(16,12-/.P,64,5,0,1,4)^#,
+
+D(16,12-/.P,82,5,0,1,10)^#,
+D(16,13-/.P,81,5,0,1,11)^#,
+D(16,17-/.P,9,5,0,1,10)^#,
+
+D(16,17-/.P,28,5,0,1,9)^#,
+D(16,17-/.P,52,5,0,1,10)^#,
+D(16,15-/.P,9,5,0,1,65)^#,
+
+D(16,17-/.P,81,5,0,1,11)^#,
+D(16,18-/.P,13,5,0,1,8)^#,
+D(16,19-/.P,3,5,0,1,11)^#,
+
+D(16,19-/.P,19,5,0,1,10)^#,
+D(16,19-/.P,34,5,0,1,10)^#,
+D(16,19-/.P,50,5,0,1,10)^#,
+
+D(16,19-/.P,65,5,0,1,11)^#,
+D(16,19-/.P,81,5,0,1,11)^#,
+D(16,22-/.P,36,5,0,1,1)^#,
+
+D(16,22-/.P,67,5,0,1,1)^#,
+IF{\GPARAM["ST","AP.INV.view.trans.det"];/.DFT.TMO;99999}^/.SCRN.TM,
+Run on: 12292017 - 0829                                                                       Procedure List                                                                                   Page 2   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                         AP.INV.view.trans.det
+
+IF{/no.tbar;/.GUI %Z.ws.toolbar(^/.TB)},
+""^/TIMED.OUT,
+1^NKS["TIMED.OUT"],
+
+A^E,B^F,IF{'F D(34,34)^F},1^d,
+DO{IF{d D(1,18,16,0,0,24,0,28,92,16)^#,
+        D(16,0,0,5,1,28,92)^#,
+
+        D(16,2-/.P,9,5,0,1,48)^#,
+        P(2-/.P,9,(\GR[/c.vendor]A|0_"  "_\GR[/c.vendor]|10'="  "):48L)^#,
+        D(16,4-/.P,9,5,0,1,15)^#,
+
+        P(4-/.P,9,*KZ[/kz]M|1:15L)^#,
+        D(16,4-/.P,37,5,0,1,3)^#,
+        P(4-/.P,37,*KZ[/kz]M|4:3L)^#,
+
+        *KZ[/kz]M|3^D,D(16,4-/.P,68,5,0,1,8)^#,
+        P(4-/.P,68,%Z.date.out(D)^C:8L)^#,
+        IF{*KZ[/kz]M["C"]|1 D(16,6-/.P,11,5,0,1,6)^#,
+
+                            P(6-/.P,11,*KZ[/kz]M["C"]|1:6L)^#},
+        D(16,6-/.P,37,5,0,1,6)^#,
+        P(6-/.P,37,*KZ[/kz]M|2:6L)^#,
+
+        D(16,6-/.P,68,5,0,1,10)^#,
+        P(6-/.P,68,*KZ[/kz]M|18:10L)^#,
+        D(16,8-/.P,13,5,0,1,65)^#,
+
+        P(8-/.P,13,*KZ[/kz]M["DN"]:65L)^#,
+        D(16,10-/.P,3,5,0,1,11)^#,
+        P(10-/.P,3,*KZ[/kz]M|8:11R)^#,
+
+        D(16,10-/.P,19,5,0,1,10)^#,
+        P(10-/.P,19,*KZ[/kz]M|9:10R)^#,
+        D(16,10-/.P,34,5,0,1,10)^#,
+
+        P(10-/.P,34,*KZ[/kz]M|10:10R)^#,
+        D(16,10-/.P,50,5,0,1,10)^#,
+        P(10-/.P,50,*KZ[/kz]M|11:10R)^#,
+
+        D(16,10-/.P,65,5,0,1,11)^#,
+        P(10-/.P,65,*KZ[/kz]M|12:11R)^#,
+        D(16,10-/.P,81,5,0,1,11)^#,
+        P(10-/.P,81,*KZ[/kz]M|13:11R)^#,
+
+        ""^d},
+   1^/ZSPOOL.NEW.JOB,
+   ""^/kzT^D^C,
+
+   P(12-/.P,7,C^A:3L)^#,
+   DO{/.SCRN.TM^#S,
+      #R[12-/.P,7,3,A]^A^G,0^#S,IF{#Y^/Z,
+
+                                   /Z=145 C^A,
+                                          P(12-/.P,7,A:3L)^#;
+                                   '/Z 1^#O,0^#S,1^/TIMED.OUT,
+
+                                       IF{/TIMED.OUT 231;232}^/Z},A^B,
+      IF{/Z=27 146^/Z},
+      IF{/Z^t=146!(t=231) ""^A},
+
+      IF{t=232 1;
+         t=165 P(12-/.P,7)^#,%Z.fmw("NO HELP AVAILABLE",0,0),
+               1;
+
+         t=164 P(12-/.P,7)^#,%Z.more.help.color("AP.INV","txn.urn","AP.INV.view.trans.det",20),1;
+         t=167 %Z.hot.key("S"),1;
+         t'=13'=146'=145'=144'=166'=231 D(7)^#,1;
+
+         t=231 "";t=232 1;
+         A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(12-/.P,7),Q("URN",3,A))^S.FA P(12-/.P,7,S.FA^A^B^G:3L)^#,1}};
+                                 %AP.INV.id.txn.color(A,"AR")^A,IF{'A;P(12-/.P,7,A^G:(3L))_P(12-/.P,7)^#},A^B,'A;
+
+                                 ""^/v.yn.lines^/v.yn.dist,'*KZ[/kz]T[B] ("No such transaction. ")^/.WO,%Z.w.macro(0,1)}} G^A},
+   IF{A_0'=(C_0) B^/kzT},
+Run on: 12292017 - 0829                                                                       Procedure List                                                                                   Page 3   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                         AP.INV.view.trans.det
+
+   IF{G=A!'G;P(12-/.P,7,A:3L)_P(12-/.P,7)^#},
+   IF{A 1^s,
+        *KZ[/kz]T[/kzT]|0^D,P(12-/.P,25,%Z.date.out(D)^C:8L)^#,
+
+        *KZ[/kz]T[/kzT]|20^D,P(13-/.P,25,%Z.date.out(D)^C:8L)^#,
+        P(13-/.P,44,*KZ[/kz]T[/kzT]C|2:10L)^#,
+        P(12-/.P,44,*KZ[/kz]T[/kzT]|1:3L)^#,
+
+        P(12-/.P,64,*KZ[/kz]T[/kzT]|2:4L)^#,
+        P(12-/.P,82,*KZ[/kz]T[/kzT]|9:10L)^#,
+        P(13-/.P,81,IF{*KZ[/kz]T[/kzT]|10 IF{*KZ[/kz]T[/kzT]|22;*KZ[/kz]M|18}}:11L)^#,
+
+        P(17-/.P,9,*KZ[/kz]T[/kzT]|10:10L)^#,
+        P(17-/.P,28,IF{?KYC[IF{*KZ[/kz]T[/kzT]|10 IF{*KZ[/kz]T[/kzT]|22;*KZ[/kz]M|18}},*KZ[/kz]T[/kzT]|10]^/ky :KY[/ky]|2}:9L)^#,
+        P(17-/.P,52,IF{?KYC[IF{*KZ[/kz]T[/kzT]|10 IF{*KZ[/kz]T[/kzT]|22;*KZ[/kz]M|18}},*KZ[/kz]T[/kzT]|10]^/ky %Z.date.out(:KY[/ky]|6)}:10L)^#,
+
+        P(15-/.P,9,*KZ[/kz]T[/kzT]|11:65L)^#,
+        P(17-/.P,81,IF{""^PB,/kzT^TU,DO{IF{*KZ[/kz]T[-*KZ[/kz]T[TU]^TU]|8^PB "";TU}},PB}:11R)^#,
+        P(18-/.P,13,*KZ[/kz]T[/kzT]|21:8L)^#,
+
+        P(19-/.P,3,*KZ[/kz]T[/kzT]|3:11R)^#,
+        P(19-/.P,19,*KZ[/kz]T[/kzT]|4:10R)^#,
+        P(19-/.P,34,*KZ[/kz]T[/kzT]|5:10R)^#,
+
+        P(19-/.P,50,*KZ[/kz]T[/kzT]|6:10R)^#,
+        P(19-/.P,65,*KZ[/kz]T[/kzT]|7:11R)^#,
+        P(19-/.P,81,*KZ[/kz]T[/kzT]|8:11R)^#,
+
+        1^s,IF{/Z=231;13^/Z},""^A^B^C^D^G,
+        DO{IF{/Z=231 999^s;s<3 %AP.INV.view.trans.det.S[1](s)^s},
+           s<3&(/Z'=147)&(/Z'=146)&(/Z'=231);
+
+           IF{/Z=13!(/Z=141)!(/Z=9) 147^/Z},
+           /Z'=231'=146'=147 D(7)^#;
+           /Z^/OK,IF{s=3 2^s},
+
+           IF{/Z=231 IF{/exit.nks;._D(127)^y,DO{+/[y]^y IF{(y<"a")!(y>"z") IF{'NKS[y] K(/[y])}}}},1^ok,
+                     IF{/.GUI 1^/G.MSE,%AP.INV.view.trans.det.S["M"]("INIT")},231^/Z,ok;
+              /Z=146 IF{%Z.fmw("Exit? ",3,"",IF{/.GUI 1;3},"",2,"Exit Confirmation");/TIMED.OUT}^x,
+
+                     IF{x IF{/exit.nks;._D(127)^y,DO{+/[y]^y IF{(y<"a")!(y>"z") IF{'NKS[y] K(/[y])}}}},x}^ok,
+                     IF{/.GUI 1^/G.MSE,%AP.INV.view.trans.det.S["M"]("INIT")},139^/Z,ok;
+              0^f,
+              IF{f>0 ""^ok,%Z.fmw(f_" Required field"_IF{f=1 " is";"s are"}_" missing",3,1,"","",1,"Error")};
+
+              1^ok,
+              139^/Z,ok IF{E IF{/ZSPOOL.SUBMERGE %Z.spool.bj.start(E,"",V(F));%[E](V(F))}},
+                        ""},
+
+           'ok},
+        1^d,IF{/Z=231 1;""};1}^G,
+   146'=/Z&(231'=/Z)&'G},
+
+D(23,0)^#,IF{/exit.nub;D(2,1)^#},U(/.WZ)^/.WH,U(/.WZ)^/.WW,
+IF{/.GUI ""^/.SCRN.TITLE[/.SCRN.TITLE],/.SCRN.TITLE-1>0^/.SCRN.TITLE,
+         IF{/no.tbar;%Z.ws.toolbar(^/.TB,1)},
+
+         %AP.INV.view.trans.det.S["M"]("UT"),
+         {G.MSE.SV}^{/G.MSE,G.MSE.SV}},
+K(NKS),
+
+END;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+AP.INV.view.trans.det.S 1
+
+
+AP.INV.view.trans.det.S.1,MA4,POU.5.62.MIS,5.62,09.12.17.1826,"COLOR",
+
+A^s,
+DO{IF{s=1 /v.yn.lines^D^C,
+          C^A,
+
+          DO{/.SCRN.TM^#S,
+             #R[22-/.P,36,1,A]^A^G,0^#S,IF{#Y^/Z,
+Run on: 12292017 - 0829                                                                       Procedure List                                                                                   Page 4   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                         AP.INV.view.trans.det
+
+                                           /Z=145 C^A,
+                                                  P(22-/.P,36,A:1L)^#;
+                                           '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+
+                                               IF{/TIMED.OUT 231;232}^/Z},A~$L.TO.U^B,
+             /Z^t,
+             IF{t=231 "";t=232 1;
+
+                A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(22-/.P,36),Q("YN",1,A))^S.FA P(22-/.P,36,S.FA^A^B^G:1L)^#,1}};
+                                        A'="Y"'="y"'="N"'="n"!'A %Z.fmw("<Y/y or N/n>",0,1);
+                                        B="Y" %AP.INV.view.lines.vr(""),""^A^B^C^D^G^/v.yn.lines,P(22-/.P,36,/v.yn.lines:1L)^#}} G^A},
+
+          IF{A_0'=(C_0) B^/v.yn.lines},
+          IF{G=A!'G;P(22-/.P,36,A:1L)_P(22-/.P,36)^#},
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+
+             t=231 999;
+             t=232 s;
+             t=144 13^t^/Z,s+1;
+
+             t=13!(t=9) s+1;
+             t=27 146^t^/Z,s;
+             t=142 1;
+
+             t=143 2;
+             t=141 3;
+             t=165 P(22-/.P,36)^#,%Z.fmw("<Y/y or N/n>",0,0),
+
+                   s;
+             t=164 P(22-/.P,36)^#,%Z.more.help.color("AP.INV","yn.lines","AP.INV.view.trans.det",41),s;
+             t=167 %Z.hot.key("S"),s;
+
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   IF{s=2 /v.yn.dist^D^C,
+          C^A,
+
+          DO{/.SCRN.TM^#S,
+             #R[22-/.P,67,1,A]^A^G,0^#S,IF{#Y^/Z,
+                                           /Z=145 C^A,
+
+                                                  P(22-/.P,67,A:1L)^#;
+                                           '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                               IF{/TIMED.OUT 231;232}^/Z},A~$L.TO.U^B,
+             /Z^t,
+
+             IF{t=231 "";t=232 1;
+                A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(22-/.P,67),Q("YN",1,A))^S.FA P(22-/.P,67,S.FA^A^B^G:1L)^#,1}};
+                                        A'="Y"'="y"'="N"'="n"!'A %Z.fmw("<Y/y or N/n>",0,1);
+
+                                        B="Y" %AP.INV.view.dist.vr(""),""^A^B^C^D^G^/v.yn.dist,P(22-/.P,67,/v.yn.dist:1L)^#}} G^A},
+          IF{A_0'=(C_0) B^/v.yn.dist},
+          IF{G=A!'G;P(22-/.P,67,A:1L)_P(22-/.P,67)^#},
+
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+             t=231 999;
+             t=232 s;
+
+             t=144 13^t^/Z,s+1;
+             t=13!(t=9) s+1;
+             t=27 146^t^/Z,s;
+
+             t=139!(t=11) 139^t^/Z,s-1;
+             t=142 1;
+             t=143 2;
+
+             t=141 3;
+             t=165 P(22-/.P,67)^#,%Z.fmw("<Y/y or N/n>",0,0),
+                   s;
+
+             t=164 P(22-/.P,67)^#,%Z.more.help.color("AP.INV","yn.dist","AP.INV.view.trans.det",42),s;
+             t=167 %Z.hot.key("S"),s;
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+
+   s'<1'>2&(t'=147'=146)},
+%Z.down.flags(1),
+Run on: 12292017 - 0829                                                                       Procedure List                                                                                   Page 5   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                         AP.INV.view.trans.det
+
+s;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+AP.INV.view.trans.det.S M
+
+
+AP.INV.view.trans.det.S.M,MA4,POU.5.62.MIS,5.62,09.12.17.1826,"COLOR",
+
+IF{A="INIT" Q(37,1)^/G.MSE[22-/.P,36],
+            Q(68,2)^/G.MSE[22-/.P,67];
+   A="ST" IF{+/G.MSE[""] /.SAVE.MSE.CNT+1^/.SAVE.MSE.CNT,M(/G.MSE,/SAVE.MSE[/.SAVE.MSE.CNT]),K(/G.MSE),1^/G.MSE};
+
+   A="UT" K(/G.MSE),IF{+/SAVE.MSE[""] M(/SAVE.MSE[/.SAVE.MSE.CNT],/G.MSE),K(/SAVE.MSE[/.SAVE.MSE.CNT]),/.SAVE.MSE.CNT-1>0^/.SAVE.MSE.CNT,1^/G.MSE}},
+END;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

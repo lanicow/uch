@@ -1,0 +1,1326 @@
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 1   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+
+PP.PER.audit.trail.report
+
+
+PP.PER.audit.trail.report,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+IF{A="ok" IF{(L(+/c.payroll[""])=0) ("RESTRICT TO PAYROLL missing. ")^/.WO,%Z.w.macro(1,1),"";
+             IF{+/c.field[""]_0=0!(/c.field["9,0"]!(/c.field["10,0"]));
+
+                /c.include.system.user ""^/c.include.system.user,
+                                       P(21-/.P,63,/c.include.system.user:1L)^#},
+             %Z.on.device("")};
+
+   IF{+/c.field[""]_0=0 ""^jh,
+                        DO{+&JH[jh]^jh 1^/c.field[jh]}},
+   O(/)="P"^MBT,
+
+   IF{MBT %Z.move.slash("D")},
+   %PP.PER.audit.report.sort("")X,
+   IF{MBT %Z.move.slash("M",1),
+
+          IF{%.DTEMP[/.JOB] F(%.DTEMP[/.JOB])}}};
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PP.PER.audit.trail.report.S
+
+
+PP.PER.audit.trail.report.S,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+
+^$.[/.T]^T,
+1^/ZSPOOL.NEW.JOB,
+1^/Z.SCHED.RPT,
+
+IF{/.GUI 1^/G.MSE,
+         %PP.PER.audit.trail.report.S["M"]("ST"),
+         %PP.PER.audit.trail.report.S["M"]("INIT")},
+
+IF{/.BUFF O(#B)},
+IF{/exit.nub ""^/exit.nub;D(2,0)^#},
+D(23,4,0,26-/.P,67,1)^#,
+
+67^/.WW,
+26-/.P^/.WH,
+IF{\GU[/.USR]BPS V(\GU[/.USR]BPS)^#;%["Z.chg.palettes"^E] %[E]("SCRN")},
+IF{/.GUI D(30)_"CC"_{("Audit Trail Report":67TL,
+
+                     "")}^#,
+         "Audit Trail Report"^/.SCRN.TITLE[/.SCRN.TITLE+1^/.SCRN.TITLE];
+   ("Audit Trail Report":67CT)^#,
+
+   D(16,1-/.P,0,4,0)^#},
+P(3-/.P,0,"Restrict To:")P(3-/.P,16,"Payroll(s)")P(3-/.P,29,"Employee Status(es)")^#,
+P(8-/.P,0,"From Empl Name")P(9-/.P,0,"Thru Empl Name")P(11-/.P,0,"From Department")^#,
+
+P(12-/.P,0,"Thru Department")^#,
+P(14-/.P,0,D(4,3,66))^#,
+P(16-/.P,0,"From Filing Date")P(16-/.P,34,"Restrict to Field(s)")P(17-/.P,0,"Thru Filing Date")^#,
+
+P(19-/.P,0,"From Audit User")P(20-/.P,0,"Thru Audit User")P(21-/.P,34,"Include ** SYSTEM ** User?")^#,
+P(23-/.P,0,D(4,3,66))^#,
+P(25-/.P,0,"Primary Sort Key")P(25-/.P,33,"Secondary Sort Key")^#,
+
+D(1,2)^#,
+D(16,4-/.P,17,5,0,3,8)^#,
+D(16,4-/.P,35,5,0,3,7)^#,
+
+D(16,8-/.P,17,5,0,1,26)^#,
+D(16,9-/.P,17,5,0,1,26)^#,
+D(16,11-/.P,17,5,0,1,15)^#,
+
+D(16,12-/.P,17,5,0,1,15)^#,
+D(16,16-/.P,17,5,0,1,9)^#,
+D(16,17-/.P,17,5,0,1,9)^#,
+
+D(16,19-/.P,17,5,0,1,10)^#,
+D(16,20-/.P,17,5,0,1,10)^#,
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 2   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+D(16,17-/.P,34,5,0,3,30)^#,
+D(16,21-/.P,63,5,0,1,1)^#,
+D(16,25-/.P,17,5,0,1,11)^#,
+
+D(16,25-/.P,53,5,0,1,11)^#,
+IF{\GPARAM["ST","PP.PER.audit.trail.report"];/.DFT.TMO;99999}^/.SCRN.TM,
+IF{/no.tbar;/.GUI %Z.ws.toolbar(^/.TB)},
+
+""^/TIMED.OUT,
+1^NKS["TIMED.OUT"],
+A^E^/S.PGM,B^F^/S.ARG,IF{'F D(34,34)^F},1^d,
+
+0^i,""^/c.payroll,
+DO{+/c.payroll[/c.payroll]^/c.payroll 0^/T1["E",/c.payroll^/T1[i+1^i]],
+                                      IF{i<4 /c.payroll^D,P(4-/.P+(i-1),17,D^C)^#,
+
+                                             1^s}},
+0^i,""^/c.status,
+DO{+/c.status[/c.status]^/c.status 0^/T2["E",/c.status^/T2[i+1^i]],
+
+                                   IF{i<4 /c.status^D,P(4-/.P+(i-1),35,D^C)^#,
+                                          1^s}},
+0^i,""^/c.field,
+
+DO{+/c.field[/c.field]^/c.field 0^/T5["E",/c.field^/T5[i+1^i]],
+                                IF{i<4 /c.field^D,P(17-/.P+(i-1),34,&JH[/c.field]|1)^#,
+                                       1^s}},
+
+1^s^/T5^/T2^/T1,IF{/Z=231;13^/Z},""^A^B^C^D^G,
+DO{IF{/Z=231 999^s;s=1 %PP.PER.audit.trail.report.S[1](1)^s},
+   IF{/Z=231 999^s;s=2 %PP.PER.audit.trail.report.S[2](2)^s},
+
+   IF{/Z=231 999^s;s'<3'>6 %PP.PER.audit.trail.report.S[3](s)^s},
+   IF{/Z=231 999^s;s'<7'>10 %PP.PER.audit.trail.report.S[4](s)^s},
+   IF{/Z=231 999^s;s=11 %PP.PER.audit.trail.report.S[5](11)^s},
+
+   IF{/Z=231 999^s;s=12 %PP.PER.audit.trail.report.S[6](s)^s},
+   IF{/Z=231 999^s;s'<13'>14 %PP.PER.audit.trail.report.S[7](s)^s},
+   s<15&(/Z'=147)&(/Z'=146)&(/Z'=231);
+
+   IF{/Z=13!(/Z=141)!(/Z=9) 147^/Z},
+   /Z'=231'=146'=147 D(7)^#;
+   /Z^/OK,IF{s=15 14^s},
+   IF{/Z=231 IF{/exit.nks;._D(127)^y,DO{+/[y]^y IF{(y<"a")!(y>"z") IF{'NKS[y] K(/[y])}}}},1^ok,
+
+             IF{/.GUI 1^/G.MSE,%PP.PER.audit.trail.report.S["M"]("INIT")},231^/Z,ok;
+      /Z=146 IF{%Z.fmw("Exit? ",3,"",IF{/.GUI 1;3},"",2,"Exit Confirmation");/TIMED.OUT}^x,
+             IF{x IF{/exit.nks;._D(127)^y,DO{+/[y]^y IF{(y<"a")!(y>"z") IF{'NKS[y] K(/[y])}}}},x}^ok,
+
+             IF{/.GUI 1^/G.MSE,%PP.PER.audit.trail.report.S["M"]("INIT")},139^/Z,ok;
+      0^f,
+      IF{+/c.field[""]_0=0!(/c.field["9,0"]!(/c.field["10,0"])) IF{/c.include.system.user;12^s,f+1^f}},
+
+      IF{/e.audit.user;10^s,f+1^f},
+      IF{/b.audit.user;9^s,f+1^f},
+      IF{/e.audit.date;8^s,f+1^f},
+
+      IF{/b.audit.date;7^s,f+1^f},
+      IF{/e.dept;6^s,f+1^f},
+      IF{/b.dept;5^s,f+1^f},
+
+      IF{/e.ft.name;4^s,f+1^f},
+      IF{/b.ft.name;3^s,f+1^f},
+      IF{f>0 ""^ok,%Z.fmw(f_" Required field"_IF{f=1 " is";"s are"}_" missing",{27,30,"C"},1,"","",1,"Error")};
+
+      %PP.PER.audit.trail.report("ok")^ok,
+      139^/Z,ok K(/T1),K(/T2),K(/T5),IF{E IF{/ZSPOOL.SUBMERGE %Z.spool.bj.start(E,"",V(F));%[E](V(F))}},
+                ""},
+
+   'ok},
+D(23,0)^#,IF{/exit.nub;D(2,1)^#},
+IF{/.GUI ""^/.SCRN.TITLE[/.SCRN.TITLE],/.SCRN.TITLE-1>0^/.SCRN.TITLE,
+
+         IF{/no.tbar;%Z.ws.toolbar(^/.TB,1)},
+         %PP.PER.audit.trail.report.S["M"]("UT")},
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 3   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+K(NKS),
+END;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.trail.report.S 0
+
+
+PP.PER.audit.trail.report.S.0,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+IF{A=0 D(23,4,0,26,67,4)^#,
+       IF{/.GUI D(30)_"CC"_{("Audit Trail Report":67TL,
+
+                            "")}^#,
+                "Audit Trail Report"^/.SCRN.TITLE[/.SCRN.TITLE+1^/.SCRN.TITLE];
+          ("Audit Trail Report":67CT)^#,
+
+          D(16,1-/.P,0,4,0)^#},
+       P(3-/.P,0,"Restrict To:")P(3-/.P,16,"Payroll(s)")P(3-/.P,29,"Employee Status(es)")^#,
+       P(8-/.P,0,"From Empl Name")P(9-/.P,0,"Thru Empl Name")P(11-/.P,0,"From Department")^#,
+
+       P(12-/.P,0,"Thru Department")^#,
+       P(14-/.P,0,D(4,3,66))^#,
+       P(16-/.P,0,"From Filing Date")P(16-/.P,34,"Restrict to Field(s)")P(17-/.P,0,"Thru Filing Date")^#,
+
+       P(19-/.P,0,"From Audit User")P(20-/.P,0,"Thru Audit User")P(21-/.P,34,"Include ** SYSTEM ** User?")^#,
+       P(23-/.P,0,D(4,3,66))^#,
+       P(25-/.P,0,"Primary Sort Key")P(25-/.P,33,"Secondary Sort Key")^#,
+
+       D(1,2)^#,
+       D(1,5)^#,
+       D(16,4-/.P,17,5,0,3,8)^#,
+
+       ""^VAL,
+       Q("c.payroll",4-/.P,17,8L,3,8,1,"","","","")^/MULT[8],
+       DO{+/GZJ[/gzj]V["c.payroll",VAL]^VAL VAL^D,D^C^/FIELD["c.payroll",VAL]|0,
+
+                                            ""^/FIELD["c.payroll",VAL]|1},
+       ""^VAL,0^ITN,
+       DO{+/FIELD["c.payroll",VAL]^VAL&(ITN<3) /FIELD["c.payroll",VAL]|0^VAL1,
+
+                                               P(4-/.P+(ITN*1),17,VAL1:8L)^#,
+                                               ITN+1^ITN},
+       IF{VAL;""^/MULT[8],K(/MULT[8])},
+       D(16,4-/.P,35,5,0,3,7)^#,
+
+       ""^VAL,
+       Q("c.status",4-/.P,35,7L,3,7,1,"","","","")^/MULT[9],
+       DO{+/GZJ[/gzj]V["c.status",VAL]^VAL VAL^D,D^C^/FIELD["c.status",VAL]|0,
+
+                                           ""^/FIELD["c.status",VAL]|1},
+       ""^VAL,0^ITN,
+       DO{+/FIELD["c.status",VAL]^VAL&(ITN<3) /FIELD["c.status",VAL]|0^VAL1,
+
+                                              P(4-/.P+(ITN*1),35,VAL1:7L)^#,
+                                              ITN+1^ITN},
+       IF{VAL;""^/MULT[9],K(/MULT[9])},
+
+       D(16,8-/.P,17,5,0,1,26)^#,
+       P(8-/.P,17,/GZJ[/gzj]V["b.ft.name"]|1:26L)^#,
+       D(16,9-/.P,17,5,0,1,26)^#,
+
+       P(9-/.P,17,/GZJ[/gzj]V["e.ft.name"]|1:26L)^#,
+       D(16,11-/.P,17,5,0,1,15)^#,
+       P(11-/.P,17,/GZJ[/gzj]V["b.dept"]|1:15L)^#,
+
+       D(16,12-/.P,17,5,0,1,15)^#,
+       P(12-/.P,17,/GZJ[/gzj]V["e.dept"]|1:15L)^#,
+       D(16,16-/.P,17,5,0,1,9)^#,
+
+       P(16-/.P,17,/GZJ[/gzj]V["b.audit.date"]|1:9L)^#,
+       D(16,17-/.P,17,5,0,1,9)^#,
+       P(17-/.P,17,/GZJ[/gzj]V["e.audit.date"]|1:9L)^#,
+
+       D(16,19-/.P,17,5,0,1,10)^#,
+       P(19-/.P,17,/GZJ[/gzj]V["b.audit.user"]|1:10L)^#,
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 4   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+       D(16,20-/.P,17,5,0,1,10)^#,
+       P(20-/.P,17,/GZJ[/gzj]V["e.audit.user"]|1:10L)^#,
+       D(16,17-/.P,34,5,0,3,30)^#,
+
+       ""^VAL,
+       Q("c.field",17-/.P,34,30L,3,30,1,"","","","")^/MULT[55],
+       DO{+/GZJ[/gzj]V["c.field",VAL]^VAL VAL^D,D^C^/FIELD["c.field",VAL]|0,
+
+                                          ""^/FIELD["c.field",VAL]|1},
+       ""^VAL,0^ITN,
+       DO{+/FIELD["c.field",VAL]^VAL&(ITN<3) /FIELD["c.field",VAL]|0^VAL1,
+
+                                             P(17-/.P+(ITN*1),34,VAL1:30L)^#,
+                                             ITN+1^ITN},
+       IF{VAL;""^/MULT[55],K(/MULT[55])},
+
+       D(16,21-/.P,63,5,0,1,1)^#,
+       P(21-/.P,63,/GZJ[/gzj]V["c.include.system.user"]|1:1L)^#,
+       D(16,25-/.P,17,5,0,1,11)^#,
+
+       P(25-/.P,17,/GZJ[/gzj]V["c.audit.report.pri.sort"]|1:11L)^#,
+       D(16,25-/.P,53,5,0,1,11)^#,
+       P(25-/.P,53,/GZJ[/gzj]V["c.audit.report.sec.sort"]|1:11L)^#,
+
+       IF{+/MULT[""]^X,'X 1^EXIT;
+          %MIS.JOB.sched.ee.M.display.mult("")},
+       %Z.fmw("Press <RETURN> to EXIT",3,0),
+
+       K(/FIELD),
+       IF{/.GUI ""^/.SCRN.TITLE[/.SCRN.TITLE],/.SCRN.TITLE-1>0^/.SCRN.TITLE},
+       D(23,0)^#;
+
+   A=1 13^/Z,
+       /b.ft.name^A,
+       IF{A="BEGINNING" D(127);A}^B,
+
+       IF{1&('A!(A'="BEGINNING")) .,
+                                  D(127)^C,
+                                  IF{A=C;
+
+                                     IF{'A "";%PP.PER.name.id.color(A,"BA")^A,
+                                        IF{A="BEGINNING" D(127);A}^B,'A} 1^/Z.SCHED.ERR}},
+       B^/b.ft.name,
+       /e.ft.name^A,
+
+       IF{A="END" D(127);A}^B,
+       IF{1&('A!(A'="END")) .,
+                            D(127)^C,
+
+                            IF{A=C;
+                               IF{'A "";%PP.PER.name.id.color(A,"BA")^A,
+                                  IF{A="END" D(127);A}^B,'A} 1^/Z.SCHED.ERR}},
+
+       B^/e.ft.name,
+       /b.dept^A,
+       IF{A="BEGINNING" D(127);A}^B,
+
+       IF{1&('A!(A'="BEGINNING")) .,
+                                  D(127)^C,
+                                  IF{A=C;
+
+                                     IF{'A "";%MIS.GL.DEPT.id.color(A,"AA")^A,
+                                        IF{A="BEGINNING" D(127);A}^B,'A} 1^/Z.SCHED.ERR}},
+       B^/b.dept,
+
+       /e.dept^A,
+       IF{A="END" D(127);A}^B,
+       IF{1&('A!(A'="END")) .,
+
+                            D(127)^C,
+                            IF{A=C;
+                               IF{'A "";%MIS.GL.DEPT.id.color(A,"AA")^A,
+
+                                  IF{A="END" D(127);A}^B,'A} 1^/Z.SCHED.ERR}},
+       B^/e.dept,
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 5   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+       /b.audit.date^A,
+       IF{A="BEGINNING" D(127);%Z.date.in(A)}^B,
+       B^/b.audit.date,
+
+       /e.audit.date^A,
+       IF{A="END" D(127);%Z.date.in(A)}^B,
+       B^/e.audit.date,
+
+       /b.audit.user^A,
+       IF{A="BEGINNING" D(127);A}^B,
+       IF{1&('A!(A'="BEGINNING")) .,
+
+                                  D(127)^C,
+                                  IF{A=C;
+                                     IF{'A "";%MIS.USER.id.dict(A,"BA")^A,
+
+                                        IF{A="BEGINNING" D(127);A}^B,'A} 1^/Z.SCHED.ERR}},
+       B^/b.audit.user,
+       /e.audit.user^A,
+
+       IF{A="END" D(127);A}^B,
+       IF{1&('A!(A'="END")) .,
+                            D(127)^C,
+
+                            IF{A=C;
+                               IF{'A "";%MIS.USER.id.dict(A,"BA")^A,
+                                  IF{A="END" D(127);A}^B,'A} 1^/Z.SCHED.ERR}},
+
+       B^/e.audit.user,
+       IF{+/c.field[""]_0=0!(/c.field["9,0"]!(/c.field["10,0"])) /c.include.system.user^A,
+                                                                 A~$L.TO.U^B,
+
+                                                                 B^/c.include.system.user},
+       /c.audit.report.pri.sort^A,
+       A^B,
+
+       IF{1 .,
+            ""^C,
+            IF{A=C;
+
+               IF{B=/c.audit.report.sec.sort ("Cannot be the same as the secondary sort key. ")^/.WO,%Z.w.macro(0,1)} 1^/Z.SCHED.ERR}},
+       B^/c.audit.report.pri.sort,
+       IF{/c.audit.report.pri.sort /c.audit.report.sec.sort^A,
+                                   A^B,
+
+                                   IF{1 .,
+                                        ""^C,
+                                        IF{A=C;
+
+                                           IF{B=/c.audit.report.pri.sort ("Cannot be the same as the primary sort key. ")^/.WO,%Z.w.macro(0,1)} 1^/Z.SCHED.ERR}},
+                                   B^/c.audit.report.sec.sort},
+       IF{/Z.SCHED.ERR;%PP.PER.audit.trail.report("ok")},
+
+       .},
+END;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.trail.report.S 1
+
+
+PP.PER.audit.trail.report.S.1,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+A^s,
+[^/T1^F]^urn,1^itn^c,
+
+IF{[F]X [F]X|0^itn,[F,[F]X|1^urn]^/c.payroll,""^[F]X;
+   /Z'=139 [F,urn]^/c.payroll;
+   3^itn,urn+2^urn,
+
+   DO{[F,urn]^/c.payroll,'/c.payroll&(itn>1) urn-1^urn,itn-1^itn}},
+IF{/Z=3&(/G.MSE)&('/G.MSEIFE) IF{/G.MSEL'<1'>1 urn+1^urn,itn+1^itn,[F,urn]^/c.payroll;[F,urn+(/G.MSEI-itn)] itn^g.msei,urn^g.msel,[F,urn+(/G.MSEI-itn)^urn]^/c.payroll,
+                                                                                                            /G.MSEI^itn,%Z.mouse(/G.MSEL,itn,1)^s;
+
+                                 /G.MSEI'<itn DO{[F,urn] urn+1^urn,itn+1^itn},""^/c.payroll}},
+""^/G.MSEIFE,
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 6   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+DO{IF{itn'<1'>3;
+      itn=0 D(16,4-/.P,17,19,2,3,8,1)^#,
+            P(4-/.P,17,/c.payroll:8L)^#,
+
+            1^itn;
+      IF{itn=4 D(16,4-/.P,17,19,0,3,8,1)^#,3^itn-1^i,urn^j},
+      DO{[F,j]^/c.payroll&(i+1^i<4) .,
+
+                                    P(i-1+4-/.P,17,/c.payroll:8L)^#,
+                                    j+1^j},
+      IF{i<4 D(16,i-1+4-/.P,17,5,1,1,8)^#},
+
+      [F,urn]^/c.payroll,IF{/Z=142 1^itn;3^itn}},
+   IF{s=1&(itn'=0) /c.payroll^D^C,
+                   C^A,DO{/.SCRN.TM^#S,#R[itn-1+4-/.P,17,8,A]^A^G,0^#S,IF{#Y^/Z,
+
+                                                                          /Z=145 P(itn-1+4-/.P,17,C^A:8L)^#;
+                                                                          '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                                                              IF{/TIMED.OUT 231;232}^/Z},A^B,
+
+                          /Z^t,
+                          IF{t=231 "";t=232 1;
+                             A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(itn-1+4-/.P,17),Q("FREE",8,A))^S.FA P(itn-1+4-/.P,17,S.FA^A^B^G:8L)^#,1}};
+
+                                                     %Z.id.dict.color(^&JA,A,"Mnemonic":10L,"CD","AR","Payroll")^A,IF{'A;P(itn-1+4-/.P,17,A^G:(8L))_P(itn-1+4-/.P,17)^#},A^B,'A;
+                                                     ._A:0S%0^A^B,(A="?")!'A %Z.fmw("Free Text (no '?')",0,1);
+                                                     %PP.PAYROLL.security(B) 1}} G^A,[F,urn]^/c.payroll},
+
+                   IF{A_0=(C_0);'A [F,urn]^/c.payroll,urn^k,DO{[F,k+1]^[F,k] k+1^k},""^[F,k]^[F]E[/c.payroll],
+                                   K(/c.payroll[/c.payroll]),
+                                   D(16,itn-1+4-/.P,17,19,0,6-(itn-2+4)*1,8,1)^#,[F,3-itn+urn]^/c.payroll,
+
+                                   IF{/c.payroll .,
+                                                 P(6-/.P,17,/c.payroll:8L)^#,
+                                                 ""},
+
+                                   IF{[F,urn]^/c.payroll 99^t};
+                      [F]E[B] %Z.fmw("Duplicate entry",0,1),
+                              P(itn-1+4-/.P,17,C^A:8L)^#,D^/c.payroll,99^t;
+
+                      IF{D^/c.payroll /c.payroll[/c.payroll]^k,""^/c.payroll[/c.payroll]^[F]E[/c.payroll],
+                                      B^/c.payroll,k^/c.payroll[/c.payroll]},
+                      0^[F]E[B^[F,urn]],B^/c.payroll,1^/c.payroll[/c.payroll]},
+                   IF{G=A!'G;P(itn-1+4-/.P,17,A:8L)_P(itn-1+4-/.P,17)^#},
+
+                   IF{t=13!(t=144)!(t=9) IF{'/c.payroll 141^t^/Z;4^t};
+                      t=139!(t=11) 139^/Z^t,IF{urn>1 1^s,21^t}},
+                   IF{t=3&(/G.MSE) %Z.mouse(s,itn,/.mouse.argc)^s,itn^g.msei,urn^g.msel,
+
+                                   IF{s=1 IF{[F,urn+(/G.MSEI-itn)]![F,urn+(/G.MSEI-itn)-1] [F,urn+(/G.MSEI-itn)^urn]^/c.payroll,
+                                                                                           /G.MSEI^itn;
+                                             D(7)^#,/G.MSEL^s}};
+
+                      t=231 999^s;
+                      t=232 s;
+                      t=4 IF{'/c.payroll D(7)^#;IF{[F,urn+1^urn]^/c.payroll;1^s},itn+1^itn};
+
+                      t=21 IF{urn=1 D(7)^#;[F,urn-1^urn]^/c.payroll,itn-1^itn};
+                      t=27 146^t^/Z;
+                      t=141 2^s;
+
+                      t=142 IF{urn=1 D(7)^#;urn=itn [F,1^urn^itn]^/c.payroll;1^urn^j^itn,0^i,99^itn};
+                      t=28 IF{urn=1 D(7)^#;urn=itn [F,itn-10!1^urn^itn]^/c.payroll;urn-10!1^j,itn<10 0^i,99^itn,j^urn,142^/Z;j-urn+itn^itn,[F,j^urn]^/c.payroll};
+                      t=143 IF{'/c.payroll D(7)^#;-[F,":"]+1^j'>(urn+3-itn) ""^/c.payroll,j-urn+itn^itn,j^urn;j^urn,99^itn,0^i,urn-2^j},1^s;
+
+                      t=31 IF{'/c.payroll D(7)^#;urn+10&(-[F,":"]+1)^j'>(urn+3-itn) j-urn+itn^itn,[F,j^urn]^/c.payroll;j^urn,99^itn,0^i,urn-2^j},1^s;
+                      t=165 P(itn-1+4-/.P,17)^#,%Z.fmw("Press <LOOKUP> to see a list of choices",0,0),s;
+                      t=164 P(itn-1+4-/.P,17)^#,%Z.more.help.color("PP.PER","payroll","PP.PER.audit.trail.report",8,3),s;
+
+                      t=167 %Z.hot.key("S"),s;
+                      t=99 "";
+                      (t=134)!(t=133) IF{last.sec'=s ""^FROM},s^last.sec,
+
+                                      IF{('FROM)!(t=133) %Z.search.mult.prompt(FROM)^FROM},
+                                      IF{FROM /c.payroll^store.av,urn^store.urn,
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 7   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+                                              ""^/FOUND,
+                                              IF{[F]E[FROM] DO{+[F,urn]^urn&('/FOUND) IF{[F,urn]=FROM urn^new.urn,FROM^new.av,1^/FOUND}}},
+                                              IF{/FOUND itn+(new.urn-store.urn)^itn,0^i,new.urn^urn-2^j,new.av^/c.payroll;
+
+                                                 ("Entry Not Found")^/.WO,%Z.w.macro(1,0),
+                                                 store.av^/c.payroll,store.urn^urn},
+                                              ""^store.av^store.urn^new.av^new.urn^/FOUND};
+
+                      t'=147'=146'=145'=144'=166 D(7)^#}},
+   s=1&(t'=147'=146)},
+IF{t=146!(t=147)!(t=3) Q(itn,urn)^[F]X},
+
+urn-itn+1^[F],
+%Z.down.flags(1),
+s;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.trail.report.S 2
+
+
+PP.PER.audit.trail.report.S.2,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+A^s,
+
+[^/T2^F]^urn,1^itn^c,
+IF{[F]X [F]X|0^itn,[F,[F]X|1^urn]^/c.status,""^[F]X;
+   /Z'=139 [F,urn]^/c.status;
+
+   3^itn,urn+2^urn,
+   DO{[F,urn]^/c.status,'/c.status&(itn>1) urn-1^urn,itn-1^itn}},
+IF{/Z=3&(/G.MSE)&('/G.MSEIFE) IF{/G.MSEL'<2'>2 urn+1^urn,itn+1^itn,[F,urn]^/c.status;[F,urn+(/G.MSEI-itn)] itn^g.msei,urn^g.msel,[F,urn+(/G.MSEI-itn)^urn]^/c.status,
+
+                                                                                                           /G.MSEI^itn,%Z.mouse(/G.MSEL,itn,1)^s;
+                                 /G.MSEI'<itn DO{[F,urn] urn+1^urn,itn+1^itn},""^/c.status}},
+""^/G.MSEIFE,
+
+DO{IF{itn'<1'>3;
+      itn=0 D(16,4-/.P,35,19,2,3,7,1)^#,
+            P(4-/.P,35,/c.status:7L)^#,
+
+            1^itn;
+      IF{itn=4 D(16,4-/.P,35,19,0,3,7,1)^#,3^itn-1^i,urn^j},
+      DO{[F,j]^/c.status&(i+1^i<4) .,
+                                   P(i-1+4-/.P,35,/c.status:7L)^#,
+
+                                   j+1^j},
+      IF{i<4 D(16,i-1+4-/.P,35,5,1,1,7)^#},
+      [F,urn]^/c.status,IF{/Z=142 1^itn;3^itn}},
+
+   IF{s=2&(itn'=0) /c.status^D^C,
+                   C^A,DO{/.SCRN.TM^#S,#R[itn-1+4-/.P,35,7,A]^A^G,0^#S,IF{#Y^/Z,
+                                                                          /Z=145 P(itn-1+4-/.P,35,C^A:7L)^#;
+
+                                                                          '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                                                              IF{/TIMED.OUT 231;232}^/Z},A^B,
+                          /Z^t,
+
+                          IF{t=231 "";t=232 1;
+                             A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(itn-1+4-/.P,35),Q("CHOICE",7,A))^S.FA P(itn-1+4-/.P,35,S.FA^A^B^G:7L)^#,1}};
+                                                     ",NEW,ACTIVE,LEAVE,ON CALL,TERM,LT DIS,W COMP,RETIRED,DECEASD"^X%L(X,(D(44)_IF{t=144 %Z.choice(X,A)^A;A}))#"0,"^x,"";
+
+                                                     IF{'A!'x;x^G^A,A^B,P(itn-1+4-/.P,35,A:7L)^# ""} IF{t=144 D(7)^#;%Z.fmw(X%0,0,1)}}} G^A,[F,urn]^/c.status},
+                   IF{A_0=(C_0);'A [F,urn]^/c.status,urn^k,DO{[F,k+1]^[F,k] k+1^k},""^[F,k]^[F]E[/c.status],
+                                   K(/c.status[/c.status]),
+
+                                   D(16,itn-1+4-/.P,35,19,0,6-(itn-2+4)*1,7,1)^#,[F,3-itn+urn]^/c.status,
+                                   IF{/c.status .,
+                                                P(6-/.P,35,/c.status:7L)^#,
+
+                                                ""},
+                                   IF{[F,urn]^/c.status 99^t};
+                      [F]E[B] %Z.fmw("Duplicate entry",0,1),
+
+                              P(itn-1+4-/.P,35,C^A:7L)^#,D^/c.status,99^t;
+                      IF{D^/c.status /c.status[/c.status]^k,""^/c.status[/c.status]^[F]E[/c.status],
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 8   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+                                     B^/c.status,k^/c.status[/c.status]},
+                      0^[F]E[B^[F,urn]],B^/c.status,1^/c.status[/c.status]},
+                   IF{G=A!'G;P(itn-1+4-/.P,35,A:7L)_P(itn-1+4-/.P,35)^#},
+
+                   IF{t=13!(t=144)!(t=9) IF{'/c.status 141^t^/Z;4^t};
+                      t=139!(t=11) 139^/Z^t,IF{urn>1 2^s,21^t}},
+                   IF{t=3&(/G.MSE) %Z.mouse(s,itn,/.mouse.argc)^s,itn^g.msei,urn^g.msel,
+
+                                   IF{s=2 IF{[F,urn+(/G.MSEI-itn)]![F,urn+(/G.MSEI-itn)-1] [F,urn+(/G.MSEI-itn)^urn]^/c.status,
+                                                                                           /G.MSEI^itn;
+                                             D(7)^#,/G.MSEL^s}};
+
+                      t=231 999^s;
+                      t=232 s;
+                      t=4 IF{'/c.status D(7)^#;IF{[F,urn+1^urn]^/c.status;2^s},itn+1^itn};
+
+                      t=139!(t=11) s-1^s;
+                      t=21 IF{urn=1 D(7)^#;[F,urn-1^urn]^/c.status,itn-1^itn};
+                      t=27 146^t^/Z;
+
+                      t=140 1^s;
+                      t=141 3^s;
+                      t=142 IF{urn=1 D(7)^#;urn=itn [F,1^urn^itn]^/c.status;1^urn^j^itn,0^i,99^itn};
+
+                      t=28 IF{urn=1 D(7)^#;urn=itn [F,itn-10!1^urn^itn]^/c.status;urn-10!1^j,itn<10 0^i,99^itn,j^urn,142^/Z;j-urn+itn^itn,[F,j^urn]^/c.status};
+                      t=143 IF{'/c.status D(7)^#;-[F,":"]+1^j'>(urn+3-itn) ""^/c.status,j-urn+itn^itn,j^urn;j^urn,99^itn,0^i,urn-2^j},2^s;
+                      t=31 IF{'/c.status D(7)^#;urn+10&(-[F,":"]+1)^j'>(urn+3-itn) j-urn+itn^itn,[F,j^urn]^/c.status;j^urn,99^itn,0^i,urn-2^j},2^s;
+
+                      t=165 P(itn-1+4-/.P,35)^#,%Z.fmw("NEW,ACTIVE,LEAVE,ON CALL,TERM,LT DIS,W COMP,RETIRED,DECEASD",0,0),s;
+                      t=164 P(itn-1+4-/.P,35)^#,%Z.more.help.color("PP.PER","status","PP.PER.audit.trail.report",9,3),s;
+                      t=167 %Z.hot.key("S"),s;
+
+                      t=99 "";
+                      (t=134)!(t=133) IF{last.sec'=s ""^FROM},s^last.sec,
+                                      IF{('FROM)!(t=133) %Z.search.mult.prompt(FROM)^FROM},
+
+                                      IF{FROM /c.status^store.av,urn^store.urn,
+                                              ""^/FOUND,
+                                              IF{[F]E[FROM] DO{+[F,urn]^urn&('/FOUND) IF{[F,urn]=FROM urn^new.urn,FROM^new.av,1^/FOUND}}},
+
+                                              IF{/FOUND itn+(new.urn-store.urn)^itn,0^i,new.urn^urn-2^j,new.av^/c.status;
+                                                 ("Entry Not Found")^/.WO,%Z.w.macro(1,0),
+                                                 store.av^/c.status,store.urn^urn},
+                                              ""^store.av^store.urn^new.av^new.urn^/FOUND};
+
+                      t'=147'=146'=145'=144'=166 D(7)^#}},
+   s=2&(t'=147'=146)},
+IF{t=146!(t=147)!(t=3) Q(itn,urn)^[F]X},
+
+urn-itn+1^[F],
+%Z.down.flags(1),
+s;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.trail.report.S 3
+
+
+PP.PER.audit.trail.report.S.3,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+A^s,
+
+DO{IF{s=3 IF{/b.ft.name;D(127)^/b.ft.name}^D,IF{D=D(127) "BEGINNING";D}^C,
+          IF{(%PP.PER.FIELDS.init(""))&""},
+          P(8-/.P,17,IF{/S.EI["b.ft.name"]|1;C}^A:26L)^#,
+
+          DO{""^/S.EXT,/.SCRN.TM^#S,
+             #R[8-/.P,17,26,A]^A^G,0^#S,IF{#Y^/Z,
+                                           /Z=145 C^A,
+
+                                                  P(8-/.P,17,A:26L)^#;
+                                           '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                               IF{/TIMED.OUT 231;232}^/Z},IF{A="BEGINNING" D(127);A}^B,
+
+             /Z^t,
+             IF{t=231 "";t=232 1;
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 9   
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+                A'=C&('A!(A'="BEGINNING"))!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(8-/.P,17),Q("FREE",26,A))^S.FA P(8-/.P,17,S.FA^A^B^G:26L)^#,1}};
+                                                              %PP.PER.name.id.color(A,"BA")^A,IF{'A;P(8-/.P,17,A^G:(26L))_P(8-/.P,17)^#},IF{A="BEGINNING" D(127);A}^B,'A;
+                                                              ._A:0S%0^A^B,(A="?")!'A %Z.fmw("Free Text (no '?')",0,1)}} G^A},
+
+          IF{A_0'=(C_0) B^/b.ft.name},
+          ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"b.ft.name")^/S.EI["b.ft.name"],""^/S.EXT,
+          IF{G=A!'G&'AX;P(8-/.P,17,IF{AX;A}:26L)_P(8-/.P,17)^#},
+
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+             t=231 999;
+             t=232 s;
+
+             t=144 13^t^/Z,s+1;
+             t=13!(t=9) s+1;
+             t=27 146^t^/Z,s;
+
+             t=139!(t=11) 139^t^/Z,s-1;
+             t=142 3;
+             t=143 6;
+
+             t=141 7;
+             t=165 P(8-/.P,17)^#,%Z.fmw("Free Text (no '?')",0,0),
+                   s;
+
+             t=164 P(8-/.P,17)^#,%Z.more.help.color("PP.PER","ft.name","PP.PER.audit.trail.report",10),s;
+             t=167 %Z.hot.key("S"),s;
+             t=140 2;
+
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   IF{s=4 IF{/e.ft.name;D(127)^/e.ft.name}^D,IF{D=D(127) "END";D}^C,
+          P(9-/.P,17,IF{/S.EI["e.ft.name"]|1;C}^A:26L)^#,
+
+          DO{""^/S.EXT,/.SCRN.TM^#S,
+             #R[9-/.P,17,26,A]^A^G,0^#S,IF{#Y^/Z,
+                                           /Z=145 C^A,
+
+                                                  P(9-/.P,17,A:26L)^#;
+                                           '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                               IF{/TIMED.OUT 231;232}^/Z},IF{A="END" D(127);A}^B,
+
+             /Z^t,
+             IF{t=231 "";t=232 1;
+                A'=C&('A!(A'="END"))!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(9-/.P,17),Q("FREE",26,A))^S.FA P(9-/.P,17,S.FA^A^B^G:26L)^#,1}};
+                                                        %PP.PER.name.id.color(A,"BA")^A,IF{'A;P(9-/.P,17,A^G:(26L))_P(9-/.P,17)^#},IF{A="END" D(127);A}^B,'A;
+
+                                                        ._A:0S%0^A^B,(A="?")!'A %Z.fmw("Free Text (no '?')",0,1)}} G^A},
+          IF{A_0'=(C_0) B^/e.ft.name},
+          ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"e.ft.name")^/S.EI["e.ft.name"],""^/S.EXT,
+
+          IF{G=A!'G&'AX;P(9-/.P,17,IF{AX;A}:26L)_P(9-/.P,17)^#},
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+             t=231 999;
+
+             t=232 s;
+             t=144 13^t^/Z,s+1;
+             t=13!(t=9) s+1;
+
+             t=27 146^t^/Z,s;
+             t=139!(t=11) 139^t^/Z,s-1;
+             t=142 3;
+
+             t=143 6;
+             t=141 7;
+             t=165 P(9-/.P,17)^#,%Z.fmw("Free Text (no '?')",0,0),
+
+                   s;
+             t=164 P(9-/.P,17)^#,%Z.more.help.color("PP.PER","ft.name","PP.PER.audit.trail.report",11),s;
+             t=167 %Z.hot.key("S"),s;
+
+             t=140 2;
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   IF{s=5 IF{/b.dept;D(127)^/b.dept}^D,IF{D=D(127) "BEGINNING";D}^C,
+
+          P(11-/.P,17,IF{/S.EI["b.dept"]|1;C}^A:15L)^#,
+          DO{""^/S.EXT,/.SCRN.TM^#S,
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 10  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+             #R[11-/.P,17,15,A]^A^G,0^#S,IF{#Y^/Z,
+                                            /Z=145 C^A,
+                                                   P(11-/.P,17,A:15L)^#;
+
+                                            '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                                IF{/TIMED.OUT 231;232}^/Z},IF{A="BEGINNING" D(127);A}^B,
+             /Z^t,
+
+             IF{t=231 "";t=232 1;
+                A'=C&('A!(A'="BEGINNING"))!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(11-/.P,17),Q("FREE",15,A))^S.FA P(11-/.P,17,S.FA^A^B^G:15L)^#,1}};
+                                                              %MIS.GL.DEPT.id.color(A,"AA")^A,IF{'A;P(11-/.P,17,A^G:(15L))_P(11-/.P,17)^#},IF{A="BEGINNING" D(127);A}^B,'A;
+
+                                                              ._A:0S%0^A^B,(A="?")!'A %Z.fmw("Free Text (no '?')",0,1)}} G^A},
+          IF{A_0'=(C_0) B^/b.dept},
+          ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"b.dept")^/S.EI["b.dept"],""^/S.EXT,
+
+          IF{G=A!'G&'AX;P(11-/.P,17,IF{AX;A}:15L)_P(11-/.P,17)^#},
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+             t=231 999;
+
+             t=232 s;
+             t=144 13^t^/Z,s+1;
+             t=13!(t=9) s+1;
+
+             t=27 146^t^/Z,s;
+             t=139!(t=11) 139^t^/Z,s-1;
+             t=142 3;
+
+             t=143 6;
+             t=141 7;
+             t=165 P(11-/.P,17)^#,%Z.fmw("Press <LOOKUP> to see a list of choices",0,0),
+
+                   s;
+             t=164 P(11-/.P,17)^#,%Z.more.help.color("PP.PER","dept","PP.PER.audit.trail.report",20),s;
+             t=167 %Z.hot.key("S"),s;
+
+             t=140 2;
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   IF{s=6 IF{/e.dept;D(127)^/e.dept}^D,IF{D=D(127) "END";D}^C,
+
+          P(12-/.P,17,IF{/S.EI["e.dept"]|1;C}^A:15L)^#,
+          DO{""^/S.EXT,/.SCRN.TM^#S,
+             #R[12-/.P,17,15,A]^A^G,0^#S,IF{#Y^/Z,
+                                            /Z=145 C^A,
+
+                                                   P(12-/.P,17,A:15L)^#;
+                                            '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                                IF{/TIMED.OUT 231;232}^/Z},IF{A="END" D(127);A}^B,
+
+             /Z^t,
+             IF{t=231 "";t=232 1;
+                A'=C&('A!(A'="END"))!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(12-/.P,17),Q("FREE",15,A))^S.FA P(12-/.P,17,S.FA^A^B^G:15L)^#,1}};
+
+                                                        %MIS.GL.DEPT.id.color(A,"AA")^A,IF{'A;P(12-/.P,17,A^G:(15L))_P(12-/.P,17)^#},IF{A="END" D(127);A}^B,'A;
+                                                        ._A:0S%0^A^B,(A="?")!'A %Z.fmw("Free Text (no '?')",0,1)}} G^A},
+          IF{A_0'=(C_0) B^/e.dept},
+
+          ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"e.dept")^/S.EI["e.dept"],""^/S.EXT,
+          IF{G=A!'G&'AX;P(12-/.P,17,IF{AX;A}:15L)_P(12-/.P,17)^#},
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+
+             t=231 999;
+             t=232 s;
+             t=144 13^t^/Z,s+1;
+
+             t=13!(t=9) s+1;
+             t=27 146^t^/Z,s;
+             t=139!(t=11) 139^t^/Z,s-1;
+
+             t=142 3;
+             t=143 6;
+             t=141 7;
+
+             t=165 P(12-/.P,17)^#,%Z.fmw("Press <LOOKUP> to see a list of choices",0,0),
+                   s;
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 11  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+             t=164 P(12-/.P,17)^#,%Z.more.help.color("PP.PER","dept","PP.PER.audit.trail.report",21),s;
+             t=167 %Z.hot.key("S"),s;
+             t=140 2;
+
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   s'<3'>6&(t'=147'=146)},
+%Z.down.flags(1),
+
+s;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PP.PER.audit.trail.report.S 4
+
+
+PP.PER.audit.trail.report.S.4,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+
+A^s,
+DO{IF{s=7 IF{/b.audit.date;D(127)^/b.audit.date}^D,IF{D=D(127) "BEGINNING";%Z.date.out(D)}^C,
+          P(16-/.P,17,IF{/S.EI["b.audit.date"]|1;C}^A:9L)^#,
+
+          DO{""^/S.EXT,/.SCRN.TM^#S,
+             #R[16-/.P,17,9,A]^A^G,0^#S,IF{#Y^/Z,
+                                           /Z=145 C^A,
+
+                                                  P(16-/.P,17,A:9L)^#;
+                                           '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                               IF{/TIMED.OUT 231;232}^/Z},IF{A="BEGINNING" D(127);%Z.date.in(A)}^B,
+
+             /Z^t,
+             IF{t=231 "";t=232 1;
+                A'=C&('A!(A'="BEGINNING"))!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(16-/.P,17),Q("DATE",9,A))^S.FA P(16-/.P,17,S.FA^A^B^G:9L)^#,1}};
+
+                                                              %Z.date.out(%Z.date.in(A))^A_0=0!'A %Z.fmw("<MM/DD/YY or MMDDYYYY in US, else DD/MM/YY or DDMMYYYY>",0,1)}} G^A},
+          IF{A_0'=(C_0) B^/b.audit.date},
+          ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"b.audit.date")^/S.EI["b.audit.date"],""^/S.EXT,
+
+          IF{G=A!'G&'AX;P(16-/.P,17,IF{AX;A}:9L)_P(16-/.P,17)^#},
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+             t=231 999;
+
+             t=232 s;
+             t=144 13^t^/Z,s+1;
+             t=13!(t=9) s+1;
+             t=27 146^t^/Z,s;
+
+             t=139!(t=11) 139^t^/Z,s-1;
+             t=142 7;
+             t=143 10;
+
+             t=141 11;
+             t=165 P(16-/.P,17)^#,%Z.fmw("<MM/DD/YY or MMDDYYYY in US, else DD/MM/YY or DDMMYYYY>",0,0),
+                   s;
+
+             t=164 P(16-/.P,17)^#,%Z.more.help.color("PP.PER","audit.date","PP.PER.audit.trail.report",30),s;
+             t=167 %Z.hot.key("S"),s;
+             t=140 3;
+
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   IF{s=8 IF{/e.audit.date;D(127)^/e.audit.date}^D,IF{D=D(127) "END";%Z.date.out(D)}^C,
+          P(17-/.P,17,IF{/S.EI["e.audit.date"]|1;C}^A:9L)^#,
+
+          DO{""^/S.EXT,/.SCRN.TM^#S,
+             #R[17-/.P,17,9,A]^A^G,0^#S,IF{#Y^/Z,
+                                           /Z=145 C^A,
+
+                                                  P(17-/.P,17,A:9L)^#;
+                                           '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                               IF{/TIMED.OUT 231;232}^/Z},IF{A="END" D(127);%Z.date.in(A)}^B,
+
+             /Z^t,
+             IF{t=231 "";t=232 1;
+                A'=C&('A!(A'="END"))!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(17-/.P,17),Q("DATE",9,A))^S.FA P(17-/.P,17,S.FA^A^B^G:9L)^#,1}};
+
+                                                        %Z.date.out(%Z.date.in(A))^A_0=0!'A %Z.fmw("<MM/DD/YY or MMDDYYYY in US, else DD/MM/YY or DDMMYYYY>",0,1)}} G^A},
+          IF{A_0'=(C_0) B^/e.audit.date},
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 12  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+          ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"e.audit.date")^/S.EI["e.audit.date"],""^/S.EXT,
+          IF{G=A!'G&'AX;P(17-/.P,17,IF{AX;A}:9L)_P(17-/.P,17)^#},
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+
+             t=231 999;
+             t=232 s;
+             t=144 13^t^/Z,s+1;
+
+             t=13!(t=9) s+1;
+             t=27 146^t^/Z,s;
+             t=139!(t=11) 139^t^/Z,s-1;
+
+             t=142 7;
+             t=143 10;
+             t=141 11;
+
+             t=165 P(17-/.P,17)^#,%Z.fmw("<MM/DD/YY or MMDDYYYY in US, else DD/MM/YY or DDMMYYYY>",0,0),
+                   s;
+             t=164 P(17-/.P,17)^#,%Z.more.help.color("PP.PER","audit.date","PP.PER.audit.trail.report",31),s;
+
+             t=167 %Z.hot.key("S"),s;
+             t=140 3;
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+
+   IF{s=9 IF{/b.audit.user;D(127)^/b.audit.user}^D,IF{D=D(127) "BEGINNING";D}^C,
+          P(19-/.P,17,IF{/S.EI["b.audit.user"]|1;C}^A:10L)^#,
+          DO{""^/S.EXT,/.SCRN.TM^#S,
+
+             #R[19-/.P,17,10,A]^A^G,0^#S,IF{#Y^/Z,
+                                            /Z=145 C^A,
+                                                   P(19-/.P,17,A:10L)^#;
+
+                                            '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+                                                IF{/TIMED.OUT 231;232}^/Z},IF{A="BEGINNING" D(127);A}^B,
+             /Z^t,
+
+             IF{t=231 "";t=232 1;
+                A'=C&('A!(A'="BEGINNING"))!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(19-/.P,17),Q("FREE",10,A))^S.FA P(19-/.P,17,S.FA^A^B^G:10L)^#,1}};
+                                                              %MIS.USER.id.dict(A,"BA")^A,IF{'A;P(19-/.P,17,A^G:(10L))_P(19-/.P,17)^#},IF{A="BEGINNING" D(127);A}^B,'A;
+
+                                                              ._A:0S%0^A^B,(A="?")!'A %Z.fmw("Free Text (no '?')",0,1)}} G^A},
+          IF{A_0'=(C_0) B^/b.audit.user},
+          ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"b.audit.user")^/S.EI["b.audit.user"],""^/S.EXT,
+          IF{G=A!'G&'AX;P(19-/.P,17,IF{AX;A}:10L)_P(19-/.P,17)^#},
+
+          IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+             t=231 999;
+             t=232 s;
+
+             t=144 13^t^/Z,s+1;
+             t=13!(t=9) s+1;
+             t=27 146^t^/Z,s;
+
+             t=139!(t=11) 139^t^/Z,s-1;
+             t=142 7;
+             t=143 10;
+
+             t=141 11;
+             t=165 P(19-/.P,17)^#,%Z.fmw("Press <LOOKUP> to see a list of choices",0,0),
+                   s;
+
+             t=164 P(19-/.P,17)^#,%Z.more.help.color("PP.PER","audit.user","PP.PER.audit.trail.report",40),s;
+             t=167 %Z.hot.key("S"),s;
+             t=140 3;
+
+             t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   IF{s=10 IF{/e.audit.user;D(127)^/e.audit.user}^D,IF{D=D(127) "END";D}^C,
+           P(20-/.P,17,IF{/S.EI["e.audit.user"]|1;C}^A:10L)^#,
+
+           DO{""^/S.EXT,/.SCRN.TM^#S,
+              #R[20-/.P,17,10,A]^A^G,0^#S,IF{#Y^/Z,
+                                             /Z=145 C^A,
+
+                                                    P(20-/.P,17,A:10L)^#;
+                                             '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 13  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+                                                 IF{/TIMED.OUT 231;232}^/Z},IF{A="END" D(127);A}^B,
+              /Z^t,
+              IF{t=231 "";t=232 1;
+
+                 A'=C&('A!(A'="END"))!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(20-/.P,17),Q("FREE",10,A))^S.FA P(20-/.P,17,S.FA^A^B^G:10L)^#,1}};
+                                                         %MIS.USER.id.dict(A,"BA")^A,IF{'A;P(20-/.P,17,A^G:(10L))_P(20-/.P,17)^#},IF{A="END" D(127);A}^B,'A;
+                                                         ._A:0S%0^A^B,(A="?")!'A %Z.fmw("Free Text (no '?')",0,1)}} G^A},
+
+           IF{A_0'=(C_0) B^/e.audit.user},
+           ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"e.audit.user")^/S.EI["e.audit.user"],""^/S.EXT,
+           IF{G=A!'G&'AX;P(20-/.P,17,IF{AX;A}:10L)_P(20-/.P,17)^#},
+
+           IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+              t=231 999;
+              t=232 s;
+
+              t=144 13^t^/Z,s+1;
+              t=13!(t=9) s+1;
+              t=27 146^t^/Z,s;
+
+              t=139!(t=11) 139^t^/Z,s-1;
+              t=142 7;
+              t=143 10;
+
+              t=141 11;
+              t=165 P(20-/.P,17)^#,%Z.fmw("Press <LOOKUP> to see a list of choices",0,0),
+                    s;
+
+              t=164 P(20-/.P,17)^#,%Z.more.help.color("PP.PER","audit.user","PP.PER.audit.trail.report",41),s;
+              t=167 %Z.hot.key("S"),s;
+              t=140 3;
+
+              t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   s'<7'>10&(t'=147'=146)},
+%Z.down.flags(1),
+
+s;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PP.PER.audit.trail.report.S 5
+
+
+PP.PER.audit.trail.report.S.5,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+A^s,
+
+[^/T5^F]^urn,1^itn^c,
+IF{[F]X [F]X|0^itn,[F,[F]X|1^urn]^/c.field,""^[F]X;
+   /Z'=139 [F,urn]^/c.field;
+
+   3^itn,urn+2^urn,
+   DO{[F,urn]^/c.field,'/c.field&(itn>1) urn-1^urn,itn-1^itn}},
+IF{/Z=3&(/G.MSE)&('/G.MSEIFE) IF{/G.MSEL'<11'>11 urn+1^urn,itn+1^itn,[F,urn]^/c.field;[F,urn+(/G.MSEI-itn)] itn^g.msei,urn^g.msel,[F,urn+(/G.MSEI-itn)^urn]^/c.field,
+
+                                                                                                            /G.MSEI^itn,%Z.mouse(/G.MSEL,itn,1)^s;
+                                 /G.MSEI'<itn DO{[F,urn] urn+1^urn,itn+1^itn},""^/c.field}},
+""^/G.MSEIFE,
+
+DO{IF{itn'<1'>3;
+      itn=0 D(16,17-/.P,34,19,2,3,30,1)^#,
+            P(17-/.P,34,&JH[/c.field]|1:30L)^#,
+
+            1^itn;
+      IF{itn=4 D(16,17-/.P,34,19,0,3,30,1)^#,3^itn-1^i,urn^j},
+      DO{[F,j]^/c.field&(i+1^i<4) .,
+
+                                  P(i-1+17-/.P,34,&JH[/c.field]|1:30L)^#,
+                                  j+1^j},
+      IF{i<4 D(16,i-1+17-/.P,34,5,1,1,30)^#},
+
+      [F,urn]^/c.field,IF{/Z=142 1^itn;3^itn}},
+   IF{s=11&(itn'=0) /c.field^D^C,
+                    &JH[/c.field]|1^C^A,DO{/.SCRN.TM^#S,#R[itn-1+17-/.P,34,30,A]^A^G,0^#S,IF{#Y^/Z,
+
+                                                                                             /Z=145 P(itn-1+17-/.P,34,C^A:30L)^#;
+                                                                                             '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 14  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+                                                                                                 IF{/TIMED.OUT 231;232}^/Z},
+                                           A^B,IF{B=C="WITHHOLDINGS"&(/Z=13) %PP.PER.audit.trail.wholds.S(""),13^/Z;
+                                                  B=C="BENEFITS"&(/Z=13) %PP.PER.audit.trail.benefits.S(""),13^/Z;
+
+                                                  'B&(C="WITHHOLDINGS") K(/c.whold),""^/COMMON.d.yes.no;
+                                                  'B&(C="BENEFITS") K(/c.benefit),""^/COMMON.c.yes.no},
+                                           /Z^t,
+
+                                           IF{t=231 "";t=232 1;
+                                              A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(itn-1+17-/.P,34),Q("FREE",30,A))^S.FA P(itn-1+17-/.P,34,S.FA^A^B^G:30L)^#,1}};
+                                                                      %Z.id.dict.index.color(^&JHA,A,"Name":30L,"&JH[CD]|1","AR","P/P Field")^A,IF{'A;P(itn-1+17-/.P,34,&JH[A]|1^G:(30L))_P(itn-1+17-/.P
+
+==> ,34)^#},A^B,'A;
+                                                                      ._A:0S%0^A^B,(A="?")!'A %Z.fmw("Free Text (no '?')",0,1);
+                                                                      (IF{G="WITHHOLDINGS" /Z^SV,%PP.PER.audit.trail.wholds.S(""),SV^/Z,""^SV})&"";
+
+                                                                      (IF{G="BENEFITS" /Z^SV,%PP.PER.audit.trail.benefits.S(""),SV^/Z,""^SV})&""}} G^A,[F,urn]^/c.field},
+                    IF{A_0=(C_0);'A [F,urn]^/c.field,urn^k,DO{[F,k+1]^[F,k] k+1^k},""^[F,k]^[F]E[/c.field],
+                                    K(/c.field[/c.field]),
+
+                                    D(16,itn-1+17-/.P,34,19,0,19-(itn-2+17)*1,30,1)^#,[F,3-itn+urn]^/c.field,
+                                    IF{/c.field .,
+                                                P(19-/.P,34,&JH[/c.field]|1:30L)^#,
+
+                                                ""},
+                                    IF{[F,urn]^/c.field 99^t};
+                       [F]E[B] %Z.fmw("Duplicate entry",0,1),
+
+                               P(itn-1+17-/.P,34,C^A:30L)^#,D^/c.field,99^t;
+                       IF{D^/c.field /c.field[/c.field]^k,""^/c.field[/c.field]^[F]E[/c.field],
+                                     B^/c.field,k^/c.field[/c.field]},
+
+                       0^[F]E[B^[F,urn]],B^/c.field,1^/c.field[/c.field]},
+                    IF{G=A!'G;P(itn-1+17-/.P,34,IF{&JH[/c.field]|1^X X;A}:30L)_P(itn-1+17-/.P,34)^#},
+                    IF{t=13!(t=144)!(t=9) IF{'/c.field 141^t^/Z;4^t};
+
+                       t=139!(t=11) 139^/Z^t,IF{urn>1 11^s,21^t}},
+                    IF{t=3&(/G.MSE) %Z.mouse(s,itn,/.mouse.argc)^s,itn^g.msei,urn^g.msel,
+                                    IF{s=11 IF{[F,urn+(/G.MSEI-itn)]![F,urn+(/G.MSEI-itn)-1] [F,urn+(/G.MSEI-itn)^urn]^/c.field,
+
+                                                                                             /G.MSEI^itn;
+                                               D(7)^#,/G.MSEL^s}};
+                       t=231 999^s;
+                       t=232 s;
+
+                       t=4 IF{'/c.field D(7)^#;IF{[F,urn+1^urn]^/c.field;11^s},itn+1^itn};
+                       t=139!(t=11) s-1^s;
+                       t=21 IF{urn=1 D(7)^#;[F,urn-1^urn]^/c.field,itn-1^itn};
+
+                       t=27 146^t^/Z;
+                       t=140 7^s;
+                       t=141 12^s;
+
+                       t=142 IF{urn=1 D(7)^#;urn=itn [F,1^urn^itn]^/c.field;1^urn^j^itn,0^i,99^itn};
+                       t=28 IF{urn=1 D(7)^#;urn=itn [F,itn-10!1^urn^itn]^/c.field;urn-10!1^j,itn<10 0^i,99^itn,j^urn,142^/Z;j-urn+itn^itn,[F,j^urn]^/c.field};
+                       t=143 IF{'/c.field D(7)^#;-[F,":"]+1^j'>(urn+3-itn) ""^/c.field,j-urn+itn^itn,j^urn;j^urn,99^itn,0^i,urn-2^j},11^s;
+
+                       t=31 IF{'/c.field D(7)^#;urn+10&(-[F,":"]+1)^j'>(urn+3-itn) j-urn+itn^itn,[F,j^urn]^/c.field;j^urn,99^itn,0^i,urn-2^j},11^s;
+                       t=165 P(itn-1+17-/.P,34)^#,%Z.fmw("Press <LOOKUP> to see a list of choices",0,0),s;
+                       t=164 P(itn-1+17-/.P,34)^#,%Z.more.help.color("PP.PER","field","PP.PER.audit.trail.report",55,16),s;
+
+                       t=167 %Z.hot.key("S"),s;
+                       t=99 "";
+                       (t=134)!(t=133) IF{last.sec'=s ""^FROM},s^last.sec,
+
+                                       IF{('FROM)!(t=133) %Z.search.mult.prompt(FROM)^FROM},
+                                       IF{FROM /c.field^store.av,urn^store.urn,
+                                               ""^/FOUND,
+
+                                               IF{[F]E[FROM] DO{+[F,urn]^urn&('/FOUND) IF{[F,urn]=FROM urn^new.urn,FROM^new.av,1^/FOUND}}},
+                                               IF{/FOUND itn+(new.urn-store.urn)^itn,0^i,new.urn^urn-2^j,new.av^/c.field;
+                                                  ("Entry Not Found")^/.WO,%Z.w.macro(1,0),
+
+                                                  store.av^/c.field,store.urn^urn},
+                                               ""^store.av^store.urn^new.av^new.urn^/FOUND};
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 15  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+                       t'=147'=146'=145'=144'=166 D(7)^#}},
+   s=11&(t'=147'=146)},
+IF{t=146!(t=147)!(t=3) Q(itn,urn)^[F]X},
+
+urn-itn+1^[F],
+%Z.down.flags(1),
+s;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.trail.report.S 6
+
+
+PP.PER.audit.trail.report.S.6,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+A^s,
+
+DO{IF{s=12 IF{+/c.field[""]_0=0!(/c.field["9,0"]!(/c.field["10,0"])) ""^/G.MSEIFE,
+                                                                     IF{/c.include.system.user;IF{"Y"^D D^/c.include.system.user}}^D^C,
+                                                                     P(21-/.P,63,IF{/S.EI["c.include.system.user"]|1;C}^A:1L)^#,
+
+                                                                     DO{""^/S.EXT,/.SCRN.TM^#S,
+                                                                        #R[21-/.P,63,1,A]^A^G,0^#S,IF{#Y^/Z,
+                                                                                                      /Z=145 C^A,
+
+                                                                                                             P(21-/.P,63,A:1L)^#;
+                                                                                                      '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3,"
+==>  "),
+
+                                                                                                          IF{/TIMED.OUT 231;232}^/Z},A~$L.TO.U^B,
+                                                                        /Z^t,
+                                                                        IF{t=231 "";t=232 1;
+
+                                                                           A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(21-/.P,63),Q("YN",1,A))^S.FA P(21-/.P,63,S.FA^A^B^G:1L)^#,1}};
+                                                                                                   A'="Y"'="y"'="N"'="n"!'A %Z.fmw("<Y/y or N/n>",0,1)}} G^A},
+                                                                     IF{A_0'=(C_0) B^/c.include.system.user},
+
+                                                                     ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"c.include.system.user")^/S.EI["c.include.system.user"],""^/S.EXT,
+                                                                     IF{G=A!'G&'AX;P(21-/.P,63,IF{AX;A}:1L)_P(21-/.P,63)^#};
+              IF{/Z=3&(/G.MSE) /G.MSEL^/G.MSEIFE,IF{g.msei g.msei^itn},IF{g.msel g.msel^urn},/G.MSEL^s,3;
+
+                 /Z=140!(/Z=142) 139;/Z=141!(/Z=164)!(/Z=165) 13;(/Z=143) 13;/Z}^/Z^t},
+           IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+              t=231 999;
+              t=232 s;
+
+              t=144 13^t^/Z,s+1;
+              t=13!(t=9) s+1;
+              t=27 146^t^/Z,s;
+
+              t=139!(t=11) 139^t^/Z,s-1;
+              t=142 12;
+              t=143 12;
+
+              t=141 13;
+              t=165 P(21-/.P,63)^#,%Z.fmw("<Y/y or N/n>",0,0),
+                    s;
+
+              t=164 P(21-/.P,63)^#,%Z.more.help.color("PP.PER","include.system.user","PP.PER.audit.trail.report",57),s;
+              t=167 %Z.hot.key("S"),s;
+              t=140 11;
+
+              t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   s=12&(t'=147'=146)},
+%Z.down.flags(1),
+
+s;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PP.PER.audit.trail.report.S 7
+
+
+PP.PER.audit.trail.report.S.7,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+
+A^s,
+DO{IF{s=13 /c.audit.report.pri.sort^D^C,
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 16  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+           P(25-/.P,17,IF{/S.EI["c.audit.report.pri.sort"]|1;C}^A:11L)^#,
+           DO{""^/S.EXT,/.SCRN.TM^#S,
+              #R[25-/.P,17,11,A]^A^G,0^#S,IF{#Y^/Z,
+
+                                             /Z=145 C^A,
+                                                    P(25-/.P,17,A:11L)^#;
+                                             '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+
+                                                 IF{/TIMED.OUT 231;232}^/Z},A^B,
+              /Z^t,
+              IF{t=231 "";t=232 1;
+
+                 A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(25-/.P,17),Q("CHOICE",11,A))^S.FA P(25-/.P,17,S.FA^A^B^G:11L)^#,1}};
+                                         ",FILING DATE,DEPARTMENT,AUDIT USER"^X%L(X,(D(44)_IF{t=144 %Z.choice(X,A)^A;A}))#"0,"^x,"";
+                                         IF{'A!'x;x^G^A,A^B,P(25-/.P,17,A:11L)^# ""} IF{t=144 D(7)^#;%Z.fmw(X%0,0,1)};
+
+                                         B=/c.audit.report.sec.sort ("Cannot be the same as the secondary sort key. ")^/.WO,%Z.w.macro(0,1)}} G^A},
+           IF{A_0'=(C_0) B^/c.audit.report.pri.sort},
+           ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"c.audit.report.pri.sort")^/S.EI["c.audit.report.pri.sort"],""^/S.EXT,
+
+           IF{G=A!'G&'AX;P(25-/.P,17,IF{AX;A}:11L)_P(25-/.P,17)^#},
+           IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+              t=231 999;
+
+              t=232 s;
+              t=144 13^t^/Z,s+1;
+              t=13!(t=9) s+1;
+
+              t=27 146^t^/Z,s;
+              t=139!(t=11) 139^t^/Z,s-1;
+              t=142 13;
+
+              t=143 14;
+              t=141 15;
+              t=165 P(25-/.P,17)^#,%Z.fmw("FILING DATE,DEPARTMENT,AUDIT USER",0,0),
+
+                    s;
+              t=164 P(25-/.P,17)^#,%Z.more.help.color("PP.PER","audit.report.pri.sort","PP.PER.audit.trail.report",60),s;
+              t=167 %Z.hot.key("S"),s;
+
+              t=140 12;
+              t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   IF{s=14 IF{/c.audit.report.pri.sort ""^/G.MSEIFE,
+                                       /c.audit.report.sec.sort^D^C,
+
+                                       P(25-/.P,53,IF{/S.EI["c.audit.report.sec.sort"]|1;C}^A:11L)^#,
+                                       DO{""^/S.EXT,/.SCRN.TM^#S,
+                                          #R[25-/.P,53,11,A]^A^G,0^#S,IF{#Y^/Z,
+
+                                                                         /Z=145 C^A,
+                                                                                P(25-/.P,53,A:11L)^#;
+                                                                         '/Z 1^#O,0^#S,%Z.fmw("Time Out.  Press <enter> now to prevent exiting this routine.",1,1,"","",3," "),
+
+                                                                             IF{/TIMED.OUT 231;232}^/Z},A^B,
+                                          /Z^t,
+                                          IF{t=231 "";t=232 1;
+
+                                             A'=C!(t=144)!(t=166) IF{IF{t=166 IF{%Z.field.acc("S",Q(25-/.P,53),Q("CHOICE",11,A))^S.FA P(25-/.P,53,S.FA^A^B^G:11L)^#,1}};
+                                                                     ",FILING DATE,DEPARTMENT,AUDIT USER"^X%L(X,(D(44)_IF{t=144 %Z.choice(X,A)^A;A}))#"0,"^x,"";
+                                                                     IF{'A!'x;x^G^A,A^B,P(25-/.P,53,A:11L)^# ""} IF{t=144 D(7)^#;%Z.fmw(X%0,0,1)};
+
+                                                                     B=/c.audit.report.pri.sort ("Cannot be the same as the primary sort key. ")^/.WO,%Z.w.macro(0,1)}} G^A},
+                                       IF{A_0'=(C_0) B^/c.audit.report.sec.sort},
+                                       ""^AX,Q(A,IF{/Z'=144 /S.EXT^AX},"c.audit.report.sec.sort")^/S.EI["c.audit.report.sec.sort"],""^/S.EXT,
+
+                                       IF{G=A!'G&'AX;P(25-/.P,53,IF{AX;A}:11L)_P(25-/.P,53)^#};
+              IF{/Z=3&(/G.MSE) /G.MSEL^/G.MSEIFE,IF{g.msei g.msei^itn},IF{g.msel g.msel^urn},/G.MSEL^s,3;
+                 /Z=140!(/Z=142) 139;/Z=141!(/Z=164)!(/Z=165) 13;(/Z=143) 139;/Z}^/Z^t},
+
+           IF{t=3&(/G.MSE) %Z.mouse(s)^s;
+              t=231 999;
+              t=232 s;
+
+              t=144 13^t^/Z,s+1;
+              t=13!(t=9) s+1;
+Run on: 12292017 - 0837                                                                       Procedure List                                                                                   Page 17  
+On Device: AD2HOTEL1.2                                                                     G : TEST.5.62.MIS            
+                                                                                       PP.PER.audit.trail.report
+
+              t=27 146^t^/Z,s;
+              t=139!(t=11) 139^t^/Z,s-1;
+              t=142 13;
+
+              t=143 14;
+              t=141 15;
+              t=165 P(25-/.P,53)^#,%Z.fmw("FILING DATE,DEPARTMENT,AUDIT USER",0,0),
+
+                    s;
+              t=164 P(25-/.P,53)^#,%Z.more.help.color("PP.PER","audit.report.sec.sort","PP.PER.audit.trail.report",61),s;
+              t=167 %Z.hot.key("S"),s;
+
+              t=140 12;
+              t'=147'=146'=145'=166 D(7)^#,s;s}^s},
+   s'<13'>14&(t'=147'=146)},
+
+%Z.down.flags(1),
+s;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+PP.PER.audit.trail.report.S M
+
+
+PP.PER.audit.trail.report.S.M,AE1,P5.6.MIS,5.6,07.04.04.2051,"COLOR",
+IF{A="INIT" 0^i,DO{Q(25,1,i+1)^/G.MSE[4-/.P+(1*i),17],i+1^i<3},
+            0^i,DO{Q(42,2,i+1)^/G.MSE[4-/.P+(1*i),35],i+1^i<3},
+
+            Q(43,3)^/G.MSE[8-/.P,17],
+            Q(43,4)^/G.MSE[9-/.P,17],
+            Q(32,5)^/G.MSE[11-/.P,17],
+
+            Q(32,6)^/G.MSE[12-/.P,17],
+            Q(26,7)^/G.MSE[16-/.P,17],
+            Q(26,8)^/G.MSE[17-/.P,17],
+
+            Q(27,9)^/G.MSE[19-/.P,17],
+            Q(27,10)^/G.MSE[20-/.P,17],
+            0^i,DO{Q(64,11,i+1)^/G.MSE[17-/.P+(1*i),34],i+1^i<3},
+
+            Q(64,12)^/G.MSE[21-/.P,63],
+            Q(28,13)^/G.MSE[25-/.P,17],
+            Q(64,14)^/G.MSE[25-/.P,53];
+   A="ST" IF{+/G.MSE[""] /.SAVE.MSE.CNT+1^/.SAVE.MSE.CNT,M(/G.MSE,/SAVE.MSE[/.SAVE.MSE.CNT]),K(/G.MSE),1^/G.MSE};
+
+   A="UT" K(/G.MSE),IF{+/SAVE.MSE[""] M(/SAVE.MSE[/.SAVE.MSE.CNT],/G.MSE),K(/SAVE.MSE[/.SAVE.MSE.CNT]),/.SAVE.MSE.CNT-1>0^/.SAVE.MSE.CNT,1^/G.MSE}},
+END;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
